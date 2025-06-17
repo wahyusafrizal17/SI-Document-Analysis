@@ -1,0 +1,101 @@
+.content-chat {
+    display: flex;
+    flex-direction: column;
+    height: 595px;
+    overflow-y: scroll; /* Tetap bisa di-scroll */
+    /* background: white; */
+    border-radius: .375rem;
+    position: relative;
+    scrollbar-width: none; /* Untuk Firefox */
+    -ms-overflow-style: none; /* Untuk Internet Explorer dan Edge */
+}
+
+.content-chat::-webkit-scrollbar {
+    display: none; /* Menyembunyikan scrollbar di Chrome dan Safari */
+}
+
+.content-chat form {
+    position: sticky;
+    bottom: -14px;
+    background: white;
+    padding: 10px 0px;
+    /* padding: 10px; */
+    /* border-top: 1px solid #ddd; */
+}
+
+
+.chat-sent {
+    float: right;
+    padding: 0.3rem 1rem;
+    margin: 0 0 10px 0;
+    clear: both;
+    color: #fff;
+    background: #2D2D2D;
+    /* background-image: linear-gradient(80deg, #7367f0, #9e95f5); */
+    border-radius: 0.357rem;
+    box-shadow: 0 4px 8px 0 rgba(34, 41, 47, 0.12);
+    max-width: 75%;
+    min-width: 35%;
+    text-align: justify;
+}
+
+.chat-date {
+    font-size: 0.75rem;
+    color: #b3b3b3;
+    margin-top: 10px;
+    text-align: right;
+}
+
+.chat-accepted {
+    float: left;
+    margin: 0 0 10px 0;
+    color: white;
+    background: none;
+    background-color: #575757;
+    border-radius: 0.357rem;
+    box-shadow: 0 4px 8px 0 rgba(34, 41, 47, 0.12);
+    max-width: 75%;
+    min-width: 35%;
+    clear: both;
+    padding: 0.7rem 1rem;
+    text-align: justify;
+}
+
+.card-text-active{
+    background: #ededed;
+    padding: 10px 10px;
+    border-radius: 15px;
+}
+.ml-6{
+    margin-left: 6px;
+}
+.card-histori{
+    height: 510px;
+    overflow-y: scroll;
+}
+.card-histori::-webkit-scrollbar {
+    display: none; /* Menyembunyikan scrollbar di Chrome dan Safari */
+}
+.box-sambutan{
+    margin-top: 135px;
+    text-align: center;
+}
+.text-sambutan{
+    font-size: 50px;
+    position: sticky;
+    right: 324px;
+    top: 35%;
+    transform: translateY(-50%);
+    font-weight: bold;
+    z-index: 2;
+}
+.p-sambutan{
+    font-size: 20px;
+}
+.bg-chat-doc{
+    background-color: #FFD700 !important;
+    border-color: #FFD700 !important;
+}
+.semi-dark-layout .main-menu, .main-menu.menu-dark .navigation{
+    background-color: #1E1E1E !important;
+}
