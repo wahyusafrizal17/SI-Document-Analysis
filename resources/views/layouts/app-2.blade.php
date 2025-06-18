@@ -81,11 +81,19 @@
         <div class="main-menu-content">
             <ul class="navigation navigation-main" id="main-menu-navigation" data-menu="menu-navigation">
                 <li class=" navigation-header"><span>History</span></li>
-                @if($histori->isEmpty())
-                <li class=" nav-item"><a class="d-flex align-items-center" href="javascript:void(0)"><span class="menu-title text-truncate" data-i18n="Email">Belum ada pencarian</span></a></li>
+                @if(empty($histori))
+                    <li class="nav-item">
+                        <a class="d-flex align-items-center" href="javascript:void(0)">
+                            <span class="menu-title text-truncate" data-i18n="Email">Belum ada pencarian</span>
+                        </a>
+                    </li>
                 @else
                     @foreach($histori as $row)
-                    <li class="nav-item {{ \Carbon\Carbon::parse($row->tanggal)->format('d-m-Y') == date('d-m-Y') ? 'active' : '' }}"><a class="d-flex align-items-center" href="javascript:void(0)"><span class="menu-title text-truncate" data-i18n="Email">{{ \Carbon\Carbon::parse($row->tanggal)->translatedFormat('d F Y') }}</span></a></li>
+                        <li class="nav-item {{ \Carbon\Carbon::parse($row->tanggal)->format('d-m-Y') == date('d-m-Y') ? 'active' : '' }}">
+                            <a class="d-flex align-items-center" href="javascript:void(0)">
+                                <span class="menu-title text-truncate" data-i18n="Email">{{ \Carbon\Carbon::parse($row->tanggal)->translatedFormat('d F Y') }}</span>
+                            </a>
+                        </li>
                     @endforeach
                 @endif
             </ul>

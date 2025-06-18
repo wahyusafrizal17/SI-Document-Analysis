@@ -12,7 +12,7 @@
           <div class="col-md-12">
             <div class="content-chat d-flex flex-column" id="content-chat">
               <div style="padding: 30px;">
-                @if(count($list_chat) < 1)
+                @if(count($list_chat ?? []) < 1)
                 <div class="box-sambutan">
                   <div style="position:absolute;right: 390px;background-color:#FFD700;width: 213px;height: 62px;transform:rotate(1.73deg);border-radius:10px;z-index: 1;margin-top: 15px;" class="landing-header-pdf-highlight" aria-hidden="true"></div>
                   <h1 class="text-sambutan"> Selamat Datang! </h1>

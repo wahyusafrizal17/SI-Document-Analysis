@@ -31,7 +31,10 @@ class HomeController extends Controller
     public function index()
     {
         if (!\Auth::check()) {
-            return view('chat-pdf');
+            return view('chat-pdf', [
+                'list_chat' => [],
+                'histori' => []
+            ]);
         }
         
         if (\Auth::user()->role == 'Admin') {
