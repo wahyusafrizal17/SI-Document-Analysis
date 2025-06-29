@@ -92,83 +92,109 @@ class HomeController extends Controller
     }
 
     public function sendMessage(Request $request)
-    {
-        $message = $request->input('message');
-        $files = Dokumen::all();
-        $combinedContent = "";
+{
+    $message = $request->input('message');
+    $files = Dokumen::all();
+    $combinedContent = "";
+    $foundRelevantContent = false; // Flag to track if any relevant content was found
 
-        foreach ($files as $file) {
-            // Cek apakah file sudah ada di database
-            $listFile = ListFile::where('document_id', $file->id)->first();
+    foreach ($files as $file) {
+        // Cek apakah file sudah ada di database
+        $listFile = ListFile::where('document_id', $file->id)->first();
 
-            if (!$listFile) {
-                // Kirim file ke ChatPDF API
-                $addUrlResponse = Http::withHeaders([
-                    'Content-Type' => 'application/json',
-                    'x-api-key' => 'sec_aIH4Fr9aytRWhXMk6XGVdekYBkozhcbf'
-                ])->post('https://api.chatpdf.com/v1/sources/add-url', [
-                    'url' => $file->document_url
-                ]);
+        if (!$listFile) {
+            // Kirim file ke ChatPDF API
+            $addUrlResponse = Http::withHeaders([
+                'Content-Type' => 'application/json',
+                'x-api-key' => 'sec_aIH4Fr9aytRWhXMk6XXGVdekYBkozhcbf'
+            ])->post('https://api.chatpdf.com/v1/sources/add-url', [
+                'url' => $file->document_url
+            ]);
 
-                if (!$addUrlResponse->ok()) {
-                    return response()->json([
-                        'success' => false,
-                        'file' => $file->document_url,
-                        'message' => 'Gagal mendaftarkan file ke ChatPDF API.'
-                    ], 500);
-                }
-
-                // Simpan ke database
-                $listFile = new ListFile();
-                $listFile->document_id = $file->id;
-                $listFile->source_id = $addUrlResponse->json('sourceId');
-                $listFile->created_at = now();
-                $listFile->save();
+            if (!$addUrlResponse->ok()) {
+                return response()->json([
+                    'success' => false,
+                    'file' => $file->document_url,
+                    'message' => 'Gagal mendaftarkan file ke ChatPDF API.'
+                ], 500);
             }
 
-            $sourceId = $listFile->source_id;
-
-            if ($sourceId) {
-                // Kirim pesan ke ChatPDF API
-                $chatResponse = Http::withHeaders([
-                    'Content-Type' => 'application/json',
-                    'x-api-key' => 'sec_aIH4Fr9aytRWhXMk6XGVdekYBkozhcbf'
-                ])->post('https://api.chatpdf.com/v1/chats/message', [
-                    'sourceId' => $sourceId,
-                    'messages' => [
-                        [
-                            'role' => 'user',
-                            'content' => $message
-                        ]
-                    ]
-                ]);
-
-                if ($chatResponse->ok()) {
-                    $combinedContent .= $chatResponse->json('content') . "\n";
-                } else {
-                    return response()->json([
-                        'success' => false,
-                        'file' => $file->document_url,
-                        'message' => 'Gagal mengambil data dari ChatPDF untuk file: ' . $file->document_url
-                    ], 500);
-                }
-            }
+            // Simpan ke database
+            $listFile = new ListFile();
+            $listFile->document_id = $file->id;
+            $listFile->source_id = $addUrlResponse->json('sourceId');
+            $listFile->created_at = now();
+            $listFile->save();
         }
 
-        // Simpan riwayat chat
+        $sourceId = $listFile->source_id;
+
+        if ($sourceId) {
+            // Kirim pesan ke ChatPDF API
+            $chatResponse = Http::withHeaders([
+                'Content-Type' => 'application/json',
+                'x-api-key' => 'sec_aIH4Fr9aytRWhXMk6XGVdekYBkozhcbf'
+            ])->post('https://api.chatpdf.com/v1/chats/message', [
+                'sourceId' => $sourceId,
+                'messages' => [
+                    [
+                        'role' => 'user',
+                        'content' => $message
+                    ]
+                ]
+            ]);
+
+            if ($chatResponse->ok()) {
+                $contentFromChat = $chatResponse->json('content');
+                if (!empty(trim($contentFromChat)) && strtolower(trim($contentFromChat)) !== 'maaf, saya tidak menemukan informasi mengenai nama dosen teknik informatika di halaman yang diberikan. namun, secara umum, dosen teknik informatika adalah pendidik profesional yang mengajar dan membimbing mahasiswa dalam program studi tersebut. jika anda memerlukan informasi lebih spesifik, saya sarankan untuk menghubungi politeknik tedc bandung secara langsung.') {
+                    $combinedContent .= $contentFromChat . "\n";
+                    $foundRelevantContent = true; // Set flag if content is found
+                }
+            } else {
+                return response()->json([
+                    'success' => false,
+                    'file' => $file->document_url,
+                    'message' => 'Gagal mengambil data dari ChatPDF untuk file: ' . $file->document_url
+                ], 500);
+            }
+        }
+    }
+
+    // Handle case where no relevant content was found after checking all files
+    if (!$foundRelevantContent) {
+        $errorMessage = 'Maaf, saya tidak menemukan informasi mengenai "' . $message . '" di semua dokumen yang tersedia. Silakan coba pertanyaan lain atau hubungi administrator jika Anda memerlukan informasi lebih lanjut.';
+
+        // Simpan riwayat chat meskipun tidak ditemukan
         $chatHistory = new Histori();
-        $chatHistory->document_id = $file->id;
+        $chatHistory->document_id = $file->id ?? null; // document_id might not be set if $files is empty
         $chatHistory->user_id = \Auth::user()->id;
         $chatHistory->sent = $message;
-        $chatHistory->accepted = $combinedContent;
+        $chatHistory->accepted = $errorMessage;
         $chatHistory->created_at = now();
         $chatHistory->save();
 
         return response()->json([
-            'success' => true,
+            'success' => false,
             'sent' => $message,
-            'combined_content' => $combinedContent,
-            'message' => 'Data berhasil dikombinasikan dari semua file.'
+            'combined_content' => $errorMessage,
+            'message' => $errorMessage
         ]);
     }
+
+    // Simpan riwayat chat jika ditemukan konten
+    $chatHistory = new Histori();
+    $chatHistory->document_id = $file->id; // This will hold the ID of the last processed file. Consider if you need a different logic for document_id for combined content.
+    $chatHistory->user_id = \Auth::user()->id;
+    $chatHistory->sent = $message;
+    $chatHistory->accepted = $combinedContent;
+    $chatHistory->created_at = now();
+    $chatHistory->save();
+
+    return response()->json([
+        'success' => true,
+        'sent' => $message,
+        'combined_content' => $combinedContent,
+        'message' => 'Data berhasil dikombinasikan dari semua file.'
+    ]);
+}
 }
