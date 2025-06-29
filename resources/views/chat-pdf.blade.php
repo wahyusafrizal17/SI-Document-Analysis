@@ -12,20 +12,23 @@
           <div class="col-md-12">
             <div class="content-chat d-flex flex-column" id="content-chat">
               <div style="padding: 30px;">
-                @if(count($list_chat ?? []) < 1)
-                <div class="box-sambutan">
-                  <div style="position:absolute;right: 390px;background-color:#FFD700;width: 213px;height: 62px;transform:rotate(1.73deg);border-radius:10px;z-index: 1;margin-top: 15px;" class="landing-header-pdf-highlight" aria-hidden="true"></div>
-                  <h1 class="text-sambutan"> Selamat Datang! </h1>
-                  <p class="p-sambutan mt-2">Selamat datang di TEDC ChatDoc AI! Temukan informasi yang Anda butuhkan tentang kampus, program studi, jadwal akademik, dan layanan lainnya. <br>
-                    <br>Apa yang ingin Anda cari hari ini?
-                  </p>
-                </div>
-                @endif
-                <div class="show-chat" @if(empty($list_chat)) style="display: none" @endif>
+                <div id="welcome-box" class="box-sambutan" style="display: block;">
+  <div style="position:absolute; right: 390px; background-color:#FFD700; width: 213px; height: 62px; transform:rotate(1.73deg); border-radius:10px; z-index: 1; margin-top: 15px;" class="landing-header-pdf-highlight" aria-hidden="true"></div>
+  <h1 class="text-sambutan">Selamat Datang!</h1>
+  <p class="p-sambutan mt-2">
+    Selamat datang di TEDC ChatDoc AI! Temukan informasi yang Anda butuhkan tentang kampus, program studi, jadwal akademik, dan layanan lainnya. <br><br>
+    Apa yang ingin Anda cari hari ini?
+  </p>
+</div>
+
+<div class="show-chat" id="chat-box" style="display: none;"></div>
+
+
+                {{-- <div class="show-chat" @if(empty($list_chat)) style="display: none" @endif>
                     @foreach($list_chat as $row)
                     <div class="sent">
                         <span class="chat-sent">{{ $row->sent }}
-                            <div class="chat-date">2025-02-26 10:20:09</div>
+                            <div class="chat-date">{{ $row->created_at }}</div>
                         </span>
                     </div>
                     <div class="accepted">
@@ -34,7 +37,7 @@
                         </span>
                     </div>
                     @endforeach
-                </div>
+                </div> --}}
                 
                     {{-- <div class="show-chat" style="display: none">
                         <div class="sent">

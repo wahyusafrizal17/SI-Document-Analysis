@@ -52,6 +52,16 @@ class HomeController extends Controller
         }        
     }
 
+    public function getChatByDate($tanggal)
+    {
+        $chat = Histori::where('user_id', auth()->id())
+            ->whereDate('created_at', Carbon::parse($tanggal))
+            ->orderBy('created_at', 'asc')
+            ->get();
+
+        return response()->json($chat);
+    }
+
     public function profile()
     {
         $data['model'] = User::where('id', \Auth::user()->id)->first();

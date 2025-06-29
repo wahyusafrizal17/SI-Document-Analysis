@@ -47,9 +47,7 @@
                         <div class="user-nav d-sm-flex d-none"><span class="user-name fw-bolder">{{ Auth::user()->name ?? '-' }}</span><span class="user-status">{{ Auth::user()->email ?? '-' }}</span></div><span class="avatar"><img class="round" src="../../../app-assets/images/portrait/small/avatar-s-11.jpg" alt="avatar" height="40" width="40"><span class="avatar-status-online"></span></span>
                     </a>
                     <div class="dropdown-menu dropdown-menu-end" aria-labelledby="dropdown-user">
-                        <a class="dropdown-item" href="javascript:void(0)" data-bs-toggle="modal" data-bs-target="#loginModal">
-                            <i class="me-50" data-feather="power"></i> Login
-                        </a>
+                        @if(Auth::check())
                         <a class="dropdown-item" href="{{ route('profile.index') }}">
                             <i class="me-50" data-feather="user"></i> Profile
                         </a>
@@ -59,6 +57,11 @@
                         <a class="dropdown-item" onclick="event.preventDefault(); document.getElementById('logout-form').submit();">
                             <i class="me-50" data-feather="power"></i> Logout
                         </a>
+                        @else
+                        <a class="dropdown-item" href="javascript:void(0)" data-bs-toggle="modal" data-bs-target="#loginModal">
+                            <i class="me-50" data-feather="power"></i> Login
+                        </a>
+                        @endif
                     </div>
                 </li>
             </ul>
@@ -70,7 +73,7 @@
     <div class="main-menu menu-fixed menu-dark menu-accordion menu-shadow" data-scroll-to-active="true">
         <div class="navbar-header">
             <ul class="nav navbar-nav flex-row">
-                <li class="nav-item me-auto"><a class="navbar-brand" href="">
+                <li class="nav-item me-auto"><a class="navbar-brand" href="/">
                     <img src="{{ asset('app-assets/images/tedc.png') }}" alt="" style="width: 40px;">
                         <h2 class="brand-text" style="font-size: 30px;margin-top: 3px;color: white;">TEDC</h2>
                     </a></li>
@@ -90,7 +93,7 @@
                 @else
                     @foreach($histori as $row)
                         <li class="nav-item {{ \Carbon\Carbon::parse($row->tanggal)->format('d-m-Y') == date('d-m-Y') ? 'active' : '' }}">
-                            <a class="d-flex align-items-center" href="javascript:void(0)">
+                            <a class="d-flex align-items-center" href="javascript:void(0)" onclick="showHistory('{{$row->tanggal}}')">
                                 <span class="menu-title text-truncate" data-i18n="Email">{{ \Carbon\Carbon::parse($row->tanggal)->translatedFormat('d F Y') }}</span>
                             </a>
                         </li>
@@ -106,9 +109,13 @@
     <!-- Modal Login -->
 <div class="modal fade" id="loginModal" tabindex="-1" role="dialog" aria-labelledby="loginModalLabel" aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
     <div class="modal-dialog modal-dialog-centered" role="document">
-      <div class="modal-content">
-        <div class="modal-header d-flex justify-content-center">
+      <div class="modal-content py-1">
+        {{-- <div class="modal-header d-flex justify-content-center">
           <h2 class="modal-title" id="loginModalLabel">Login</h2>
+        </div> --}}
+        <div align="center">
+            <img src="{{ asset('app-assets/images/tedc.png') }}" alt="" style="width: 20%">
+            <p class="mt-1">Siahkan login terlebih dahulu</p>
         </div>
         <form method="POST" action="{{ route('login') }}">
           @csrf
@@ -136,13 +143,12 @@
                   <span class="input-group-text cursor-pointer"><i data-feather="eye"></i></span>
               </div>
           </div>
-          <div class="mb-1" align="right">
-              <label class="form-check-label" for="remember-me"> Belum punya akun? <a href="javascript:void(0)" onclick="showRegister()">Daftar</a></label>
-          </div>
+         <div class="mb-1 d-flex justify-content-between align-items-center">
+            <label class="form-check-label mb-0" for="remember-me">
+                Belum punya akun? <a href="javascript:void(0)" onclick="showRegister()">Daftar</a>
+            </label>
+            <button type="submit" class="btn btn-primary"><i data-feather="log-in"></i> Login</button>
         </div>
-        <div class="modal-footer">
-          {{-- <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button> --}}
-          <button type="submit" class="btn btn-primary">Login</button>
         </div>
       </form>
       </div>
@@ -152,10 +158,14 @@
       <!-- Modal Register -->
 <div class="modal fade" id="registerModal" tabindex="-1" role="dialog" aria-labelledby="registerModalLabel" aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
     <div class="modal-dialog modal-dialog-centered" role="document">
-      <div class="modal-content">
-        <div class="modal-header d-flex justify-content-center">
+      <div class="modal-content py-1">
+        {{-- <div class="modal-header d-flex justify-content-center">
             <h2 class="modal-title" id="loginModalLabel">Register</h2>
-          </div>
+          </div> --}}
+          <div align="center">
+            <img src="{{ asset('app-assets/images/tedc.png') }}" alt="" style="width: 20%">
+            <p class="mt-1">Siahkan daftar terlebih dahulu</p>
+        </div>
         <form method="POST" action="{{ route('register') }}">
           @csrf
         <div class="modal-body">
@@ -201,13 +211,11 @@
                     <span class="input-group-text cursor-pointer"><i data-feather="eye"></i></span>
                 </div>
             </div>
-          <div class="mb-1" align="right">
+          <div class="mb-1 d-flex justify-content-between align-items-center">
               <label class="form-check-label" for="remember-me"> Sudah punya akun? <a href="javascript:void(0)" onclick="showLogin()">Login</a></label>
+            <button type="submit" class="btn btn-primary"><i data-feather="user-plus"></i> Register</button>
+
           </div>
-        </div>
-        <div class="modal-footer">
-          {{-- <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button> --}}
-          <button type="submit" class="btn btn-primary">Login</button>
         </div>
       </form>
       </div>
@@ -248,6 +256,47 @@
         $(document).ready(function () {
             $('#basic-datatables').DataTable();
         });
+
+        document.addEventListener('DOMContentLoaded', function () {
+            const today = new Date().toISOString().split('T')[0]; // Format: YYYY-MM-DD
+            showHistory(today);
+        });
+
+        function showHistory(date) {
+    fetch(`/chat/history/${date}`)
+        .then(response => response.json())
+        .then(data => {
+            const chatBox = document.getElementById('chat-box');
+            const welcomeBox = document.getElementById('welcome-box');
+
+            if (data.length === 0) {
+                chatBox.innerHTML = '';
+                chatBox.style.display = 'none';
+                welcomeBox.style.display = 'block';
+            } else {
+                let html = '';
+                data.forEach(row => {
+                    html += `
+                        <div class="sent">
+                            <span class="chat-sent">${row.sent}
+                                <div class="chat-date">${row.created_at}</div>
+                            </span>
+                        </div>
+                        <div class="accepted">
+                            <span class="chat-accepted">
+                                <p>${row.accepted.replace(/\n/g, '<br>')}</p>
+                            </span>
+                        </div>
+                    `;
+                });
+                chatBox.innerHTML = html;
+                chatBox.style.display = 'block';
+                welcomeBox.style.display = 'none';
+            }
+        });
+}
+
+
     </script>
     <script>
         $(window).on('load', function() {
