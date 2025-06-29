@@ -42,10 +42,10 @@ class DokumenController extends Controller
         $input = $request->all();
         if ($request->hasFile('document_url')) {
             $documentName = strtolower(str_replace(' ', '_', $request->document_name));
-            $fileName = $documentName . '_document_' . date('YmdHis') . '.png';
+            $fileName = $documentName . '_document_' . date('YmdHis') . '.pdf';
             $path = public_path('dokumen');
             $request->file('document_url')->move($path, $fileName);
-            $input['document_url'] = $fileName;
+            $input['document_url'] = url('dokumen/' . $fileName);
         }
         $input['upload_by'] = \Auth::user()->id;
         Dokumen::create($input);
@@ -88,12 +88,12 @@ class DokumenController extends Controller
     {
         $model = Dokumen::find($id);
         $input = $request->all();
-        if($request->hasFile('foto')){
-            $File = 'foto_' . date('Ymdhis').'.png';
-            $Path = base_path().'/'.'public'.'/menu';
-            $request->file('foto')->move($Path, $File);
-
-            $input['foto'] = $File;
+        if ($request->hasFile('document_url')) {
+            $documentName = strtolower(str_replace(' ', '_', $request->document_name));
+            $fileName = $documentName . '_document_' . date('YmdHis') . '.pdf';
+            $path = public_path('dokumen');
+            $request->file('document_url')->move($path, $fileName);
+            $input['document_url'] = url('dokumen/' . $fileName);
         }
         $model->update($input);
 

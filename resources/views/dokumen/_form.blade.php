@@ -6,10 +6,12 @@
         @if ($errors->has('document_name')) <span class="help-block" style="color:red">{{ $errors->first('document_name') }}</span> @endif
     </div>
 
-    <div class="form-group mt-1">
+   <div class="form-group mt-1">
         <label>Upload Dokumen</label>
-        {{ Form::file('document_url',['class'=>'form-control'])}}
-        @if ($errors->has('document_url')) <span class="help-block" style="color:red">{{ $errors->first('document_url') }}</span> @endif
+        {{ Form::file('document_url', ['class' => 'form-control', 'accept' => 'application/pdf']) }}
+        @if ($errors->has('document_url')) 
+            <span class="help-block" style="color:red">{{ $errors->first('document_url') }}</span> 
+        @endif
     </div>
   
   </div>

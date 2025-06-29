@@ -13,15 +13,15 @@
             <div class="content-chat d-flex flex-column" id="content-chat">
               <div style="padding: 30px;">
                 <div id="welcome-box" class="box-sambutan" style="display: block;">
-  <div style="position:absolute; right: 390px; background-color:#FFD700; width: 213px; height: 62px; transform:rotate(1.73deg); border-radius:10px; z-index: 1; margin-top: 15px;" class="landing-header-pdf-highlight" aria-hidden="true"></div>
-  <h1 class="text-sambutan">Selamat Datang!</h1>
-  <p class="p-sambutan mt-2">
-    Selamat datang di TEDC ChatDoc AI! Temukan informasi yang Anda butuhkan tentang kampus, program studi, jadwal akademik, dan layanan lainnya. <br><br>
-    Apa yang ingin Anda cari hari ini?
-  </p>
-</div>
+                <div style="position:absolute; right: 390px; background-color:#FFD700; width: 213px; height: 62px; transform:rotate(1.73deg); border-radius:10px; z-index: 1; margin-top: 15px;" class="landing-header-pdf-highlight" aria-hidden="true"></div>
+                <h1 class="text-sambutan">Selamat Datang!</h1>
+                <p class="p-sambutan mt-2">
+                    Selamat datang di TEDC ChatDoc AI! Temukan informasi yang Anda butuhkan tentang kampus, program studi, jadwal akademik, dan layanan lainnya. <br><br>
+                    Apa yang ingin Anda cari hari ini?
+                </p>
+                </div>
 
-<div class="show-chat" id="chat-box" style="display: none;"></div>
+                <div class="show-chat" id="chat-box" style="display: none;"></div>
 
 
                 {{-- <div class="show-chat" @if(empty($list_chat)) style="display: none" @endif>
@@ -83,6 +83,40 @@
 
 @push('scripts')
 <script>
+    function showHistory(date) {
+        fetch(`/chat/history/${date}`)
+            .then(response => response.json())
+            .then(data => {
+                const chatBox = document.getElementById('chat-box');
+                const welcomeBox = document.getElementById('welcome-box');
+
+                if (data.length === 0) {
+                    chatBox.innerHTML = '';
+                    chatBox.style.display = 'none';
+                    welcomeBox.style.display = 'block';
+                } else {
+                    let html = '';
+                    data.forEach(row => {
+                        html += `
+                            <div class="sent">
+                                <span class="chat-sent">${row.sent}
+                                    <div class="chat-date">${row.created_at}</div>
+                                </span>
+                            </div>
+                            <div class="accepted">
+                                <span class="chat-accepted">
+                                    <p>${row.accepted.replace(/\n/g, '<br>')}</p>
+                                </span>
+                            </div>
+                        `;
+                    });
+                    chatBox.innerHTML = html;
+                    chatBox.style.display = 'block';
+                    welcomeBox.style.display = 'none';
+                }
+            });
+    }
+
     $(document).ready(function () {
         @guest
             $('#loginModal').modal("show");

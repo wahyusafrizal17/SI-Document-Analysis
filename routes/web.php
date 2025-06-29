@@ -19,8 +19,6 @@ Route::get('/', [App\Http\Controllers\HomeController::class, 'index'])->name('ho
 
 Route::middleware(['auth'])->group(function () {
     // Route::get('/', [App\Http\Controllers\HomeController::class, 'index'])->name('home');
-    Route::get('/chat/history/{tanggal}', [App\Http\Controllers\HomeController::class, 'getChatByDate'])->name('chat.history');
-
     Route::post('/send-message', [App\Http\Controllers\HomeController::class, 'sendMessage'])->name('send-message');
 
     Route::get('profile', [App\Http\Controllers\HomeController::class, 'profile'])->name('profile.index');
@@ -31,4 +29,7 @@ Route::middleware(['auth'])->group(function () {
 
     Route::resource('users', 'App\Http\Controllers\UsersController');
     Route::post('users/delete', 'App\Http\Controllers\UsersController@delete')->name('users.delete');
+
+    Route::get('/chat/history/{tanggal}', [App\Http\Controllers\HomeController::class, 'getChatByDate'])->name('chat.history');
+
 });

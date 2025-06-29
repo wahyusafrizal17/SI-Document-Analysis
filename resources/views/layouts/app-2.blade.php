@@ -256,47 +256,6 @@
         $(document).ready(function () {
             $('#basic-datatables').DataTable();
         });
-
-        document.addEventListener('DOMContentLoaded', function () {
-            const today = new Date().toISOString().split('T')[0]; // Format: YYYY-MM-DD
-            showHistory(today);
-        });
-
-        function showHistory(date) {
-    fetch(`/chat/history/${date}`)
-        .then(response => response.json())
-        .then(data => {
-            const chatBox = document.getElementById('chat-box');
-            const welcomeBox = document.getElementById('welcome-box');
-
-            if (data.length === 0) {
-                chatBox.innerHTML = '';
-                chatBox.style.display = 'none';
-                welcomeBox.style.display = 'block';
-            } else {
-                let html = '';
-                data.forEach(row => {
-                    html += `
-                        <div class="sent">
-                            <span class="chat-sent">${row.sent}
-                                <div class="chat-date">${row.created_at}</div>
-                            </span>
-                        </div>
-                        <div class="accepted">
-                            <span class="chat-accepted">
-                                <p>${row.accepted.replace(/\n/g, '<br>')}</p>
-                            </span>
-                        </div>
-                    `;
-                });
-                chatBox.innerHTML = html;
-                chatBox.style.display = 'block';
-                welcomeBox.style.display = 'none';
-            }
-        });
-}
-
-
     </script>
     <script>
         $(window).on('load', function() {
