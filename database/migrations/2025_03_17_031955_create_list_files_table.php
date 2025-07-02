@@ -15,7 +15,7 @@ return new class extends Migration
     {
         Schema::create('list_file', function (Blueprint $table) {
             $table->id();
-            $table->integer('document_id');
+            $table->integer('document_id')->nullable();
             $table->string('source_id');
             $table->timestamps();
         });

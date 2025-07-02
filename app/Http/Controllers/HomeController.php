@@ -104,41 +104,55 @@ class HomeController extends Controller
             File::makeDirectory($folderPath, 0755, true);
         }
 
-        $files = File::files($folderPath);
-        if (count($files) === 0) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Tidak ada file di folder chatpdf-files.'
-            ]);
+        // Cari apakah sudah pernah upload gabungan file
+        $listFile = ListFile::where('document_id', null)->first(); // null karena ini gabungan semua
+
+        if (!$listFile) {
+            $files = File::files($folderPath);
+            if (count($files) === 0) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Tidak ada file PDF di folder chatpdf-files.'
+                ]);
+            }
+
+            // Gabungkan file PDF
+            $merger = new PDFMerger;
+            foreach ($files as $file) {
+                $merger->addPDF($file->getRealPath(), 'all');
+            }
+
+            $mergedPath = storage_path('app/merged.pdf');
+            $merger->merge('file', $mergedPath);
+
+            // Upload ke ChatPDF
+            $uploadResponse = Http::withHeaders([
+                'x-api-key' => 'sec_aIH4Fr9aytRWhXMk6XGVdekYBkozhcbf'
+            ])->attach(
+                'file', file_get_contents($mergedPath), 'merged.pdf'
+            )->post('https://api.chatpdf.com/v1/sources/add-file');
+
+            if (!$uploadResponse->ok()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Gagal upload file ke ChatPDF.',
+                    'error' => $uploadResponse->json()
+                ]);
+            }
+
+            $sourceId = $uploadResponse->json('sourceId');
+
+            // Simpan ke list_file
+            $listFile = new ListFile();
+            $listFile->document_id = null; // karena ini gabungan file
+            $listFile->source_id = $sourceId;
+            $listFile->created_at = now();
+            $listFile->save();
+        } else {
+            $sourceId = $listFile->source_id;
         }
 
-        // Gabungkan file PDF
-        $merger = new PDFMerger;
-        foreach ($files as $file) {
-            $merger->addPDF($file->getRealPath(), 'all');
-        }
-
-        $mergedPath = storage_path('app/merged.pdf');
-        $merger->merge('file', $mergedPath);
-
-        // Upload hasil gabungan ke ChatPDF
-        $uploadResponse = Http::withHeaders([
-            'x-api-key' => 'sec_aIH4Fr9aytRWhXMk6XGVdekYBkozhcbf'
-        ])->attach(
-            'file', file_get_contents($mergedPath), 'merged.pdf'
-        )->post('https://api.chatpdf.com/v1/sources/add-file');
-
-        if (!$uploadResponse->ok()) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Gagal upload file ke ChatPDF.',
-                'error' => $uploadResponse->json()
-            ]);
-        }
-
-        $sourceId = $uploadResponse->json('sourceId');
-
-        // Kirim pertanyaan
+        // Kirim pertanyaan ke ChatPDF
         $chatResponse = Http::withHeaders([
             'Content-Type' => 'application/json',
             'x-api-key' => 'sec_aIH4Fr9aytRWhXMk6XGVdekYBkozhcbf'
@@ -161,8 +175,8 @@ class HomeController extends Controller
 
         $summary = $chatResponse->json('content');
 
-        // Simpan histori
-        $chatHistory = new \App\Models\Histori();
+        // Simpan histori chat
+        $chatHistory = new Histori();
         $chatHistory->document_id = null;
         $chatHistory->user_id = \Auth::id();
         $chatHistory->sent = $message;
@@ -174,8 +188,7 @@ class HomeController extends Controller
             'success' => true,
             'sent' => $message,
             'combined_content' => $summary,
-            'message' => 'Summary berhasil dibuat dari gabungan semua file.'
+            'message' => 'Ringkasan berhasil diambil dari ChatPDF.'
         ]);
-
     }
 }
