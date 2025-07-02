@@ -153,62 +153,62 @@
     }
 
     function sendMessage() {
-    const message = $('.value-message').val();
-    if (!message.trim()) return;
+        const message = $('.value-message').val();
+        if (!message.trim()) return;
 
-    const now = new Date();
-    const formattedDate = now.getFullYear() + "-" +
-        String(now.getMonth() + 1).padStart(2, '0') + "-" +
-        String(now.getDate()).padStart(2, '0') + " " +
-        String(now.getHours()).padStart(2, '0') + ":" +
-        String(now.getMinutes()).padStart(2, '0') + ":" +
-        String(now.getSeconds()).padStart(2, '0');
+        const now = new Date();
+        const formattedDate = now.getFullYear() + "-" +
+            String(now.getMonth() + 1).padStart(2, '0') + "-" +
+            String(now.getDate()).padStart(2, '0') + " " +
+            String(now.getHours()).padStart(2, '0') + ":" +
+            String(now.getMinutes()).padStart(2, '0') + ":" +
+            String(now.getSeconds()).padStart(2, '0');
 
-    $('.box-sambutan').hide();
-    $('.show-chat').show();
+        $('.box-sambutan').hide();
+        $('.show-chat').show();
 
-    // Buat elemen HTML sementara (kita perlu referensinya nanti)
-    const sentHtml = `
-        <div class="sent">
-            <span class="chat-sent">${message}
-                <div class="chat-date">${formattedDate}</div>
-            </span>
-        </div>
-    `;
+        // Buat elemen HTML sementara (kita perlu referensinya nanti)
+        const sentHtml = `
+            <div class="sent">
+                <span class="chat-sent">${message}
+                    <div class="chat-date">${formattedDate}</div>
+                </span>
+            </div>
+        `;
 
-    const acceptedHtml = $(`
-        <div class="accepted">
-            <span class="chat-accepted">
-                <p><em>Processing...</em></p>
-            </span>
-        </div>
-    `);
+        const acceptedHtml = $(`
+            <div class="accepted">
+                <span class="chat-accepted">
+                    <p><em>Processing...</em></p>
+                </span>
+            </div>
+        `);
 
-    // Tambahkan ke DOM
-    $('.show-chat').append(sentHtml);
-    $('.show-chat').append(acceptedHtml);
+        // Tambahkan ke DOM
+        $('.show-chat').append(sentHtml);
+        $('.show-chat').append(acceptedHtml);
 
-    // Kosongkan input
-    $('.value-message').val('');
-    scrollToBottom();
+        // Kosongkan input
+        $('.value-message').val('');
+        scrollToBottom();
 
-    $.ajax({
-        url: '/send-message',
-        method: 'POST',
-        data: {
-            message: message,
-            _token: $('meta[name="csrf-token"]').attr('content')
-        },
-        success: function(response) {
-            acceptedHtml.find('.chat-accepted').html(`<p>${formatPreserved(response.combined_content)}</p>`);
-            scrollToBottom();
-        },
-        error: function(xhr, status, error) {
-            acceptedHtml.find('.chat-accepted').html(`<p style="color:red;">Terjadi kesalahan: ${error}</p>`);
-            console.error('Error sending message:', error);
-        }
-    });
-}
+        $.ajax({
+            url: '/send-message',
+            method: 'POST',
+            data: {
+                message: message,
+                _token: $('meta[name="csrf-token"]').attr('content')
+            },
+            success: function(response) {
+                acceptedHtml.find('.chat-accepted').html(`<p>${formatPreserved(response.combined_content)}</p>`);
+                scrollToBottom();
+            },
+            error: function(xhr, status, error) {
+                acceptedHtml.find('.chat-accepted').html(`<p style="color:red;">Terjadi kesalahan: ${error}</p>`);
+                console.error('Error sending message:', error);
+            }
+        });
+    }
 
 
 

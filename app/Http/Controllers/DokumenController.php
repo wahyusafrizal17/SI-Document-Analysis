@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 use App\Models\Dokumen;
 use App\Http\Requests\Dokumen\StoreRequest;
 use App\Http\Requests\Dokumen\UpdateRequest;
+use Illuminate\Support\Facades\File;
 
 class DokumenController extends Controller
 {
@@ -40,13 +41,31 @@ class DokumenController extends Controller
     public function store(StoreRequest $request)
     {
         $input = $request->all();
+
         if ($request->hasFile('document_url')) {
             $documentName = strtolower(str_replace(' ', '_', $request->document_name));
             $fileName = $documentName . '_document_' . date('YmdHis') . '.pdf';
+
+            // Simpan ke public/dokumen
             $path = public_path('dokumen');
             $request->file('document_url')->move($path, $fileName);
+
+            // Simpan URL untuk DB
             $input['document_url'] = url('dokumen/' . $fileName);
+
+            // === Tambahan: copy ke storage/app/chatpdf-files ===
+            $chatPdfFolder = storage_path('app/chatpdf-files');
+
+            if (!File::exists($chatPdfFolder)) {
+                File::makeDirectory($chatPdfFolder, 0755, true);
+            }
+
+            $sourcePath = $path . '/' . $fileName;
+            $targetPath = $chatPdfFolder . '/' . $fileName;
+
+            File::copy($sourcePath, $targetPath);
         }
+
         $input['upload_by'] = \Auth::user()->id;
         Dokumen::create($input);
 
@@ -88,13 +107,29 @@ class DokumenController extends Controller
     {
         $model = Dokumen::find($id);
         $input = $request->all();
+
         if ($request->hasFile('document_url')) {
             $documentName = strtolower(str_replace(' ', '_', $request->document_name));
             $fileName = $documentName . '_document_' . date('YmdHis') . '.pdf';
             $path = public_path('dokumen');
+
+            // Simpan file ke public/dokumen
             $request->file('document_url')->move($path, $fileName);
             $input['document_url'] = url('dokumen/' . $fileName);
+
+            // === Tambahan: copy ke storage/app/chatpdf-files ===
+            $chatPdfFolder = storage_path('app/chatpdf-files');
+
+            if (!File::exists($chatPdfFolder)) {
+                File::makeDirectory($chatPdfFolder, 0755, true);
+            }
+
+            $sourcePath = $path . '/' . $fileName;
+            $targetPath = $chatPdfFolder . '/' . $fileName;
+
+            File::copy($sourcePath, $targetPath);
         }
+
         $model->update($input);
 
         alert()->success('Data berhasil diubah', 'Berhasil');

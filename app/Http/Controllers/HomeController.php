@@ -10,6 +10,9 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Http;
 use App\Models\ListFile;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\File;
+use Clegginabox\PDFMerger\PDFMerger;
 
 class HomeController extends Controller
 {
@@ -93,82 +96,86 @@ class HomeController extends Controller
 
     public function sendMessage(Request $request)
     {
+        set_time_limit(120);
         $message = $request->input('message');
-        $files = Dokumen::all();
-        $combinedContent = "";
 
-        foreach ($files as $file) {
-            // Cek apakah file sudah ada di database
-            $listFile = ListFile::where('document_id', $file->id)->first();
-
-            if (!$listFile) {
-                // Kirim file ke ChatPDF API
-                $addUrlResponse = Http::withHeaders([
-                    'Content-Type' => 'application/json',
-                    'x-api-key' => 'sec_aIH4Fr9aytRWhXMk6XGVdekYBkozhcbf'
-                ])->post('https://api.chatpdf.com/v1/sources/add-url', [
-                    'url' => $file->document_url
-                ]);
-
-                if (!$addUrlResponse->ok()) {
-                    return response()->json([
-                        'success' => false,
-                        'file' => $file->document_url,
-                        'message' => 'Gagal mendaftarkan file ke ChatPDF API.'
-                    ], 500);
-                }
-
-                // Simpan ke database
-                $listFile = new ListFile();
-                $listFile->document_id = $file->id;
-                $listFile->source_id = $addUrlResponse->json('sourceId');
-                $listFile->created_at = now();
-                $listFile->save();
-            }
-
-            $sourceId = $listFile->source_id;
-
-            if ($sourceId) {
-                // Kirim pesan ke ChatPDF API
-                $chatResponse = Http::withHeaders([
-                    'Content-Type' => 'application/json',
-                    'x-api-key' => 'sec_aIH4Fr9aytRWhXMk6XGVdekYBkozhcbf'
-                ])->post('https://api.chatpdf.com/v1/chats/message', [
-                    'sourceId' => $sourceId,
-                    'messages' => [
-                        [
-                            'role' => 'user',
-                            'content' => $message
-                        ]
-                    ]
-                ]);
-
-                if ($chatResponse->ok()) {
-                    $combinedContent .= $chatResponse->json('content') . "\n";
-                } else {
-                    return response()->json([
-                        'success' => false,
-                        'file' => $file->document_url,
-                        'message' => 'Gagal mengambil data dari ChatPDF untuk file: ' . $file->document_url
-                    ], 500);
-                }
-            }
+        $folderPath = storage_path('app/chatpdf-files/');
+        if (!File::exists($folderPath)) {
+            File::makeDirectory($folderPath, 0755, true);
         }
 
-        // Simpan riwayat chat
-        $chatHistory = new Histori();
-        $chatHistory->document_id = $file->id;
-        $chatHistory->user_id = \Auth::user()->id;
+        $files = File::files($folderPath);
+        if (count($files) === 0) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Tidak ada file di folder chatpdf-files.'
+            ]);
+        }
+
+        // Gabungkan file PDF
+        $merger = new PDFMerger;
+        foreach ($files as $file) {
+            $merger->addPDF($file->getRealPath(), 'all');
+        }
+
+        $mergedPath = storage_path('app/merged.pdf');
+        $merger->merge('file', $mergedPath);
+
+        // Upload hasil gabungan ke ChatPDF
+        $uploadResponse = Http::withHeaders([
+            'x-api-key' => 'sec_aIH4Fr9aytRWhXMk6XGVdekYBkozhcbf'
+        ])->attach(
+            'file', file_get_contents($mergedPath), 'merged.pdf'
+        )->post('https://api.chatpdf.com/v1/sources/add-file');
+
+        if (!$uploadResponse->ok()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Gagal upload file ke ChatPDF.',
+                'error' => $uploadResponse->json()
+            ]);
+        }
+
+        $sourceId = $uploadResponse->json('sourceId');
+
+        // Kirim pertanyaan
+        $chatResponse = Http::withHeaders([
+            'Content-Type' => 'application/json',
+            'x-api-key' => 'sec_aIH4Fr9aytRWhXMk6XGVdekYBkozhcbf'
+        ])->post('https://api.chatpdf.com/v1/chats/message', [
+            'sourceId' => $sourceId,
+            'messages' => [
+                [
+                    'role' => 'user',
+                    'content' => $message
+                ]
+            ]
+        ]);
+
+        if (!$chatResponse->ok()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Gagal mendapatkan jawaban dari ChatPDF.'
+            ]);
+        }
+
+        $summary = $chatResponse->json('content');
+
+        // Simpan histori
+        $chatHistory = new \App\Models\Histori();
+        $chatHistory->document_id = null;
+        $chatHistory->user_id = \Auth::id();
         $chatHistory->sent = $message;
-        $chatHistory->accepted = $combinedContent;
+        $chatHistory->accepted = $summary;
         $chatHistory->created_at = now();
         $chatHistory->save();
 
         return response()->json([
             'success' => true,
             'sent' => $message,
-            'combined_content' => $combinedContent,
-            'message' => 'Data berhasil dikombinasikan dari semua file.'
+            'combined_content' => $summary,
+            'message' => 'Summary berhasil dibuat dari gabungan semua file.'
         ]);
+
     }
 }

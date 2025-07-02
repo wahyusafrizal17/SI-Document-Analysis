@@ -15,7 +15,7 @@ return new class extends Migration
     {
         Schema::create('histori', function (Blueprint $table) {
             $table->id();
-            $table->string('document_id');
+            $table->string('document_id')->nullable();
             $table->integer('user_id');
             $table->longText('sent');
             $table->longText('accepted');
