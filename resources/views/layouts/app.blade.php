@@ -91,12 +91,12 @@
                             <span class="menu-title text-truncate" data-i18n="Modal Examples">User</span>
                         </a>
                     </li>
-                    <li class="nav-item {!!(Request::is('history')) ? ' active' : '' !!}">
+                    {{-- <li class="nav-item {!!(Request::is('history')) ? ' active' : '' !!}">
                         <a class="d-flex align-items-center" href="{{ route('users.index') }}">
                             <i data-feather='clock'></i>
                             <span class="menu-title text-truncate" data-i18n="Modal Examples">History</span>
                         </a>
-                    </li>
+                    </li> --}}
                     {{-- <li class=" nav-item">
                         <a class="d-flex align-items-center" href="#">
                             <i data-feather="user"></i>
@@ -140,11 +140,7 @@
         <div class="drag-target"></div>
         <footer class="footer footer-static footer-light">
             <p class="clearfix mb-0">
-                <span class="float-md-start d-block d-md-inline-block mt-25">COPYRIGHT &copy; 2021 <a class="ms-25" href="https://1.envato.market/pixinvent_portfolio" target="_blank">Pixinvent</a>
-                    <span class="d-none d-sm-inline-block">, All rights Reserved</span>
-                </span>
-                <span class="float-md-end d-none d-md-block">Hand-crafted & Made with <i data-feather="heart"></i>
-                </span>
+                <span class="float-md-start d-block d-md-inline-block mt-25">COPYRIGHT &copy; {{date('Y')}} By TEDC ChatDoc AI</span>
             </p>
         </footer>
         <button class="btn btn-primary btn-icon scroll-top" type="button">
