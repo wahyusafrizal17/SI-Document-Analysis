@@ -69,6 +69,7 @@ class HomeController extends Controller
     {
         $data['model'] = User::where('id', \Auth::user()->id)->first();
         $file = (\Auth::user()->role == 'Admin') ? 'profile.admin' : 'profile.pengguna';
+        
         return view($file, $data);
     }
 

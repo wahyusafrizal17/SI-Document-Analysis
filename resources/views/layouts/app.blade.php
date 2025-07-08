@@ -56,7 +56,7 @@
             <div class="navbar-header">
                 <ul class="nav navbar-nav flex-row">
                     <li class="nav-item me-auto">
-                        <a class="navbar-brand" href="/">
+                        <a class="navbar-brand" href="/" style="margin-top: 15px;">
                             <span class="brand-logo">
                                 <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSj2Nx53dKP_qwIN7bC4gGN3p4J1SfnChpfsw&s" alt=""></span>
                                 <h2 class="brand-text mb-0" style="color: hsl(240 5.9% 10%);font-size: 15px;margin-left: -8px;margin-top: 1px;">TEDC ChatDoc AI</h2>
@@ -79,24 +79,18 @@
                             <span class="menu-title text-truncate" data-i18n="Modal Examples">Dashboard</span>
                         </a>
                     </li>
-                    <li class="nav-item {!!(Request::is('document')) ? ' active' : '' !!}">
+                    <li class="nav-item {!!(Request::is('document*')) ? ' active' : '' !!}">
                         <a class="d-flex align-items-center" href="{{ route('document.index') }}">
                             <i data-feather="file"></i>
                             <span class="menu-title text-truncate" data-i18n="Modal Examples">Dokumen</span>
                         </a>
                     </li>
-                    <li class="nav-item {!!(Request::is('users')) ? ' active' : '' !!}">
+                    <li class="nav-item {!!(Request::is('users*')) ? ' active' : '' !!}">
                         <a class="d-flex align-items-center" href="{{ route('users.index') }}">
                             <i data-feather="users"></i>
                             <span class="menu-title text-truncate" data-i18n="Modal Examples">User</span>
                         </a>
                     </li>
-                    {{-- <li class="nav-item {!!(Request::is('history')) ? ' active' : '' !!}">
-                        <a class="d-flex align-items-center" href="{{ route('users.index') }}">
-                            <i data-feather='clock'></i>
-                            <span class="menu-title text-truncate" data-i18n="Modal Examples">History</span>
-                        </a>
-                    </li> --}}
                     {{-- <li class=" nav-item">
                         <a class="d-flex align-items-center" href="#">
                             <i data-feather="user"></i>
