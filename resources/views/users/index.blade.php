@@ -11,10 +11,10 @@
             <div class="content-header-left col-md-9 col-12 mb-1">
                 <div class="row breadcrumbs-top">
                     <div class="col-12">
-                        <h2 class="content-header-title float-start mb-0">Petugas</h2>
+                        <h2 class="content-header-title float-start mb-0">Users</h2>
                         <div class="breadcrumb-wrapper">
                             <ol class="breadcrumb">
-                                <li class="breadcrumb-item"><a href="{{ route('users.index') }}">Petugas</a>
+                                <li class="breadcrumb-item"><a href="{{ route('users.index') }}">Users</a>
                                 </li>
                                 <li class="breadcrumb-item active">index
                                 </li>
@@ -31,7 +31,7 @@
                      <div class="col-md-12">
                         <div class="card">
                            <div class="card-header">
-                              <h4 class="card-title">Data Petugas</h4>
+                              <h4 class="card-title">Data Users</h4>
                               <a href="{{ route('users.create') }}" class="btn btn-primary btn-sm">
                                  <i data-feather='plus'></i> Tambah
                               </a>
