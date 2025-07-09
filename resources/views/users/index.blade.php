@@ -95,6 +95,7 @@ $(document).ready(function() {
          title: 'Apakah kamu yakin ?',
          text: "Data akan terhapus secara permanen !",
          type: 'warning',
+         icon: 'warning',
          buttons:{
             confirm: {
                text : 'Ya, saya yakin!',
