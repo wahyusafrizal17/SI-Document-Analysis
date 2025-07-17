@@ -18,6 +18,7 @@ Auth::routes();
 
 Route::get('/', [App\Http\Controllers\HomeController::class, 'index'])->name('home');
 
+// Tambahkan route khusus untuk admin dashboard
 Route::middleware(['auth'])->group(function () {
     // Route::get('/', [App\Http\Controllers\HomeController::class, 'index'])->name('home');
     Route::post('/send-message', [App\Http\Controllers\HomeController::class, 'sendMessage'])->name('send-message');
@@ -33,5 +34,4 @@ Route::middleware(['auth'])->group(function () {
 
     Route::get('/chat/history/{tanggal}', [App\Http\Controllers\HomeController::class, 'getChatByDate'])->name('chat.history');
     Route::delete('/chat/history/{tanggal}/delete', [App\Http\Controllers\HomeController::class, 'deleteHistory'])->name('chat.history.delete');
-
 });

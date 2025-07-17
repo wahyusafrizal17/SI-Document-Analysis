@@ -27,7 +27,7 @@
                     <div class="card">
                         <div class="card-header">
                             <div>
-                                <h2 class="fw-bolder mb-0">0</h2>
+                                <h2 class="fw-bolder mb-0">{{ $jumlahDokumen ?? 0 }}</h2>
                                 <p class="card-text">Dokumen</p>
                             </div>
                             <div class="avatar bg-light-primary p-50 m-0">
@@ -42,7 +42,7 @@
                     <div class="card">
                         <div class="card-header">
                             <div>
-                                <h2 class="fw-bolder mb-0">0</h2>
+                                <h2 class="fw-bolder mb-0">{{ $jumlahPengguna ?? 0 }}</h2>
                                 <p class="card-text">Pengguna</p>
                             </div>
                             <div class="avatar bg-light-success p-50 m-0">
@@ -57,7 +57,7 @@
                     <div class="card">
                         <div class="card-header">
                             <div>
-                                <h2 class="fw-bolder mb-0">0</h2>
+                                <h2 class="fw-bolder mb-0">{{ $jumlahHistory ?? 0 }}</h2>
                                 <p class="card-text">History</p>
                             </div>
                             <div class="avatar bg-light-warning p-50 m-0">

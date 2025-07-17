@@ -45,7 +45,15 @@ class HomeController extends Controller
         }
 
         if (Auth::user()->role === 'Admin') {
-            return view('welcome');
+            $jumlahDokumen = \App\Models\Dokumen::count();
+            $jumlahPengguna = \App\Models\User::count();
+            $jumlahHistory = \App\Models\Histori::count();
+
+            return view('welcome', [
+                'jumlahDokumen' => $jumlahDokumen,
+                'jumlahPengguna' => $jumlahPengguna,
+                'jumlahHistory' => $jumlahHistory,
+            ]);
         }
 
         $userId = Auth::id();
