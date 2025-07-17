@@ -54,7 +54,7 @@
                             {{-- <span class="avatar-status-online"></span> --}}
                         </span>
                     </a>
-                    <div class="dropdown-menu dropdown-menu-end" aria-labelledby="dropdown-user">
+                    <div class="dropdown-menu dropdown-menu-end" aria-labelledby="dropdown-user" style="display: none;">
                         @if(Auth::check())
                         <a class="dropdown-item" href="{{ route('profile.index') }}">
                             <i class="me-50" data-feather="user"></i> Profile
@@ -98,7 +98,7 @@
         <div class="shadow-bottom" style="background: linear-gradient(180deg, rgba(106,130,251,0.1) 0%, transparent 100%); height: 2px;"></div>
         <div class="main-menu-content" style="padding: 1rem 0;">
             <ul class="navigation navigation-main" id="main-menu-navigation" data-menu="menu-navigation">
-                <li class="navigation-header" style="padding: 1rem 1.5rem 0.5rem; margin-top: 1rem;">
+                <li class="navigation-header" style="padding: 1rem 1.5rem 0.5rem;margin-top: 1rem;margin-left: 0;border-bottom: 1px solid rgba(255,255,255,0.08);text-align: center;">
                     <span style="color: #fff; font-weight: 600; font-size: 0.875rem; text-transform: uppercase; letter-spacing: 1; opacity: 0.8;">
                         <i data-feather="clock" style="width: 14px; height: 14px; margin-right: 8px;"></i>Chat History
                     </span>
@@ -128,12 +128,12 @@
                                         <i data-feather="calendar" style="width: 18px; height: 18px; color: {{ \Carbon\Carbon::parse($row->tanggal)->format('d-m-Y') == date('d-m-Y') ? '#fff' : '#bbb' }}; opacity: {{ \Carbon\Carbon::parse($row->tanggal)->format('d-m-Y') == date('d-m-Y') ? '1' : '0.7' }};"></i>
                                     </div>
                                     <div style="flex: 1; min-width: 0;">
-                                        <div class="history-date" style="color: {{ \Carbon\Carbon::parse($row->tanggal)->format('d-m-Y') == date('d-m-Y') ? '#fff' : '#fff' }}; font-weight: 600; font-size: 0.875rem; margin-bottom: 0.25rem;">
+                                        <div class="history-date" style="color: {{ \Carbon\Carbon::parse($row->tanggal)->format('d-m-Y') == date('d-m-Y') ? '#fff' : '#fff' }}; font-weight: 600; font-size: 14px; margin-bottom: 0px;">
                                            {{ \Carbon\Carbon::parse($row->tanggal)->translatedFormat('d F Y') }}
                                         </div>
-                                        <div class="history-time" style="color: {{ \Carbon\Carbon::parse($row->tanggal)->format('d-m-Y') == date('d-m-Y') ? 'rgba(255,255,255,0.8)' : '#999' }}; font-size: 0.75rem;">
+                                        {{-- <div class="history-time" style="color: {{ \Carbon\Carbon::parse($row->tanggal)->format('d-m-Y') == date('d-m-Y') ? 'rgba(255,255,255,0.8)' : '#999' }}; font-size: 0.75rem;">
                                            {{ \Carbon\Carbon::parse($row->tanggal)->format('H:i') }}
-                                        </div>
+                                        </div> --}}
                                     </div>
                                     <div class="history-arrow" style="opacity: 0.5; transition: all 0.3s;">
                                         <i data-feather="chevron-right" style="width: 16px; height: 16px; color: {{ \Carbon\Carbon::parse($row->tanggal)->format('d-m-Y') == date('d-m-Y') ? '#fff' : '#bbb' }}"></i>
@@ -144,28 +144,34 @@
                     @endforeach
                 @endif
                 
-                <!-- Quick Actions Section -->
-                {{-- <li class="navigation-header" style="padding: 2rem 1.5rem 0.5rem; margin-top: 1rem;">
-                    <span style="color: #fff; font-weight: 600; font-size: 0.875rem; text-transform: uppercase; letter-spacing: 1; opacity: 0.8;">
-                        <i data-feather="zap" style="width: 14px; height: 14px; margin-right: 8px;"></i>Quick Actions
-                    </span>
-                </li>
-                <li class="nav-item">
-                    <a class="d-flex align-items-center menu-item" href="javascript:void(0)" onclick="clearHistory()" 
-                       style="margin: 0.25rem 1rem; padding: 0.75rem; border-radius: 1; background: rgba(255,255,255,0.05); color: #fff; transition: all 0.3s;">
-                        <i data-feather="refresh-cw" style="width: 16px; height: 16px; margin-right: 12px; opacity: 0.6;"></i>
-                        <span class="menu-title text-truncate">Clear History</span>
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a class="d-flex align-items-center menu-item" href="{{ route('profile.index') }}" 
-                       style="margin: 0.25rem 1rem; padding: 0.75rem; border-radius: 1; background: rgba(255,255,255,0.05); color: #fff; transition: all 0.3s;">
-                        <i data-feather="settings" style="width: 16px; height: 16px; margin-right: 12px; opacity: 0.6;"></i>
-                        <span class="menu-title text-truncate">Settings</span>
-                    </a>
-                </li> --}}
             </ul>
         </div>
+        @auth
+        <div class="quick-actions-bottom">
+            <div class="navigation-header" style="padding: 1.5rem 1.5rem 0.5rem;text-align: center;">
+                <span style="color: #fff; font-weight: 600; font-size: 0.875rem; text-transform: uppercase; letter-spacing: 1; opacity: 0.8;">
+                    <i data-feather="zap" style="width: 14px; height: 14px; margin-right: 8px;"></i>Quick Actions
+                </span>
+            </div>
+            <div class="nav-item">
+                <a class="d-flex align-items-center menu-item" href="{{ route('profile.index') }}"
+                   style="margin: 0.25rem 1rem; padding: 0.75rem; border-radius: 1; background: rgba(255,255,255,0.05); color: #fff; transition: all 0.3s;">
+                    <i data-feather="user" style="width: 16px; height: 16px; margin-right: 12px; opacity: 0.6;"></i>
+                    <span class="menu-title text-truncate">Profile</span>
+                </a>
+            </div>
+            <div class="nav-item">
+                <a class="d-flex align-items-center menu-item" href="#" onclick="event.preventDefault(); document.getElementById('logout-form').submit();"
+                   style="margin: 0.25rem 1rem; padding: 0.75rem; border-radius: 1; background: rgba(255,255,255,0.05); color: #fff; transition: all 0.3s;">
+                    <i data-feather="log-out" style="width: 16px; height: 16px; margin-right: 12px; opacity: 0.6;"></i>
+                    <span class="menu-title text-truncate">Logout</span>
+                </a>
+                <form id="logout-form" action="{{ route('logout') }}" method="POST" style="display: none;">
+                    @csrf
+                </form>
+            </div>
+        </div>
+        @endauth
     </div>
     <!-- END: Main Menu-->
 
@@ -356,6 +362,8 @@
 .navigation-header {
     border-bottom: 1px solid rgba(255,255,255,0.08);
     margin-bottom: 0.5rem;
+    /* padding-left: 0 !important; */
+    /* padding-right: 0 !important; */
 }
 .navbar-brand:hover {
     transform: scale(1.05);
@@ -417,6 +425,30 @@
 .menu-item-empty:hover {
     background: rgba(255,255,255,0.08);
     border-color: rgba(255,255,255,0.3);
+}
+.quick-actions-bottom {
+    position: absolute;
+    left: 0;
+    bottom: 0;
+    width: 100%;
+    /* background: rgba(34,34,50,0.98); */
+    z-index: 10;
+    /* box-shadow: 0 -2px 16px 0 rgba(31,38,135,0.07); */
+    padding-bottom: 1.5rem;
+}
+.main-menu-content {
+    position: relative;
+    padding-bottom: 120px !important; /* beri ruang untuk quick actions */
+}
+@media (max-width: 991.98px) {
+    .quick-actions-bottom {
+        position: static;
+        box-shadow: none;
+        padding-bottom: 0.5rem;
+    }
+    .main-menu-content {
+        padding-bottom: 0 !important;
+    }
 }
 </style>
 <script>
