@@ -184,37 +184,29 @@ class HomeController extends Controller
                 File::makeDirectory($folderPath, 0755, true);
             }
 
-            // Check for existing merged file with caching
-            $cacheKey = 'merged_file_source_id';
-            $sourceId = Cache::get($cacheKey);
+            // Cari listFile yang belum punya document_id
+            $listFile = ListFile::where('document_id', null)->first();
 
-            if (!$sourceId) {
-                $listFile = ListFile::where('document_id', null)->first();
+            if ($listFile) {
+                $sourceId = $listFile->source_id;
+            } else {
+                $files = File::files($folderPath);
 
-                if ($listFile) {
-                    $sourceId = $listFile->source_id;
-                    Cache::put($cacheKey, $sourceId, 3600); // Cache for 1 hour
-                } else {
-                    $files = File::files($folderPath);
+                if (empty($files)) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'Tidak ada file PDF di folder chatpdf-files.'
+                    ]);
+                }
 
-                    if (empty($files)) {
-                        return response()->json([
-                            'success' => false,
-                            'message' => 'Tidak ada file PDF di folder chatpdf-files.'
-                        ]);
-                    }
+                // Merge dan upload file, dapatkan sourceId baru
+                $sourceId = $this->mergeAndUploadPDFs($files);
 
-                    // Optimize PDF merging with memory management
-                    $sourceId = $this->mergeAndUploadPDFs($files);
-
-                    if (!$sourceId) {
-                        return response()->json([
-                            'success' => false,
-                            'message' => 'Gagal memproses file PDF.'
-                        ]);
-                    }
-
-                    Cache::put($cacheKey, $sourceId, 3600);
+                if (!$sourceId) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'Gagal memproses file PDF.'
+                    ]);
                 }
             }
 
