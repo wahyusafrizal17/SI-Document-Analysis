@@ -103,7 +103,7 @@
                         <i data-feather="clock" style="width: 14px; height: 14px; margin-right: 8px;"></i>Chat History
                     </span>
                 </li>
-                @if(empty($histori))
+                @if(empty($histori) || $histori->count() == 0)
                     <li class="nav-item">
                         <div class="menu-item-empty" style="margin: 0.5rem 1rem; padding: 1.5rem; border-radius: 1; background: rgba(255,255,255,0.05); border: 1px dashed rgba(255,255,255,0.2); text-align: center;">
                             <i data-feather="inbox" style="width: 32px; height: 32px; margin-bottom: 0.5rem; opacity: 0.4; color: #bbb;"></i>

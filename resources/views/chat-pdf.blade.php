@@ -136,13 +136,21 @@
             $('#loginModal').modal("show");
         @endguest
         
-        // Show chat history if exists on page load
-        @if(!empty($list_chat))
-            $('.box-sambutan').hide();
-            $('.show-chat').show();
+        // Always show welcome box initially
+        $('.box-sambutan').show();
+        $('.show-chat').hide();
+        
+        @if(!empty($list_chat) && $histori->count() > 0)
+            // Only if there's both chat history and histori data, show it after a brief delay
             setTimeout(() => {
+                $('.box-sambutan').hide();
+                $('.show-chat').show();
                 scrollToBottom();
             }, 100);
+        @else
+            // If no chat history or empty histori, keep welcome box visible
+            $('.box-sambutan').show();
+            $('.show-chat').hide();
         @endif
     });
 

@@ -49,61 +49,52 @@ class HomeController extends Controller
         }
 
         $userId = Auth::id();
-        $cacheKey = "user_dashboard_{$userId}";
 
-        // Cache dashboard data for5 minutes
-        $data = Cache::remember($cacheKey, 300, function () use ($userId) {
-            $histori = Histori::selectRaw('DATE(created_at) as tanggal, GROUP_CONCAT(id) as histori_ids')
-                ->where('user_id', $userId)
-                ->groupByRaw('DATE(created_at)')
-                ->orderByDesc('tanggal')
-                ->get();
+        // Get real-time data without caching
+        $histori = Histori::selectRaw('DATE(created_at) as tanggal, GROUP_CONCAT(id) as histori_ids')
+            ->where('user_id', $userId)
+            ->groupByRaw('DATE(created_at)')
+            ->orderByDesc('tanggal')
+            ->get();
 
-            $listChat = Histori::where('user_id', $userId)
-                ->whereDate('created_at', Carbon::today())
-                ->orderBy('created_at', 'asc')
-                ->get();
+        $listChat = Histori::where('user_id', $userId)
+            ->whereDate('created_at', Carbon::today())
+            ->orderBy('created_at', 'asc')
+            ->get();
 
-            return [
-                'histori' => $histori,
-                'list_chat' => $listChat
-            ];
-        });
+        $data = [
+            'histori' => $histori,
+            'list_chat' => $listChat
+        ];
 
         return view('chat-pdf', $data);
     }
 
     /**
-     * Get chat history by date with caching
+     * Get chat history by date (real-time)
      */
     public function getChatByDate($tanggal)
     {
         $userId = Auth::id();
-        $cacheKey = "chat_history_{$userId}_{$tanggal}";
 
-        $chat = Cache::remember($cacheKey, 300, function () use ($userId, $tanggal) {
-            return Histori::where('user_id', $userId)
-                ->whereDate('created_at', Carbon::parse($tanggal))
-                ->orderBy('created_at', 'asc')
-                ->get();
-        });
+        $chat = Histori::where('user_id', $userId)
+            ->whereDate('created_at', Carbon::parse($tanggal))
+            ->orderBy('created_at', 'asc')
+            ->get();
 
         return response()->json($chat);
     }
 
     /**
-     * Show user profile with optimized query
+     * Show user profile (real-time)
      */
     public function profile()
     {
         $userId = Auth::id();
-        $cacheKey = "user_profile_{$userId}";
 
-        $data['model'] = Cache::remember($cacheKey, 600, function () use ($userId) {
-            return User::select('id', 'name', 'email', 'role', 'foto', 'created_at')
-                ->where('id', $userId)
-                ->first();
-        });
+        $data['model'] = User::select('id', 'name', 'email', 'role', 'foto', 'created_at')
+            ->where('id', $userId)
+            ->first();
 
         $file = (Auth::user()->role === 'Admin') ? 'profile.admin' : 'profile.pengguna';
         return view($file, $data);
@@ -157,9 +148,7 @@ class HomeController extends Controller
 
             $model->update($input);
 
-            // Clear user-related caches
-            Cache::forget("user_profile_{$id}");
-            Cache::forget("user_dashboard_{$id}");
+            // Cache clearing no longer needed since we're using real-time data
 
             DB::commit();
 
@@ -353,10 +342,7 @@ class HomeController extends Controller
             $chatHistory->created_at = now();
             $chatHistory->save();
 
-            // Clear related caches
-            Cache::forget("user_dashboard_{$userId}");
-            Cache::forget("chat_history_{$userId}_" . date('Y-m-d'));
-
+            // Cache clearing no longer needed since we're using real-time data
         } catch (\Exception $e) {
             Log::error('Save chat history failed: ' . $e->getMessage());
         }
@@ -369,17 +355,15 @@ class HomeController extends Controller
     {
         try {
             $userId = Auth::id();
-            
+
             // Delete all chat history for the specified date
             $deletedCount = Histori::where('user_id', $userId)
                 ->whereDate('created_at', Carbon::parse($tanggal))
                 ->delete();
-            
+
             if ($deletedCount > 0) {
-                // Clear related caches
-                Cache::forget("user_dashboard_{$userId}");
-                Cache::forget("chat_history_{$userId}_{$tanggal}");
-                
+                // Cache clearing no longer needed since we're using real-time data
+
                 return response()->json([
                     'success' => true,
                     'message' => "Successfully deleted {$deletedCount} chat(s)",
@@ -391,10 +375,9 @@ class HomeController extends Controller
                     'message' => 'No chat history found for this date'
                 ]);
             }
-            
         } catch (\Exception $e) {
             Log::error('Delete history failed: ' . $e->getMessage());
-            
+
             return response()->json([
                 'success' => false,
                 'message' => 'Failed to delete chat history'
