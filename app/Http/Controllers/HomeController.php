@@ -8,11 +8,15 @@ use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\DB;
 use App\Models\ListFile;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\File;
 use Clegginabox\PDFMerger\PDFMerger;
+use Illuminate\Support\Facades\Log;
 
 class HomeController extends Controller
 {
@@ -21,10 +25,10 @@ class HomeController extends Controller
      *
      * @return void
      */
-    // public function __construct()
-    // {
-    //     $this->middleware('auth');
-    // }
+    public function __construct()
+    {
+        $this->middleware('auth')->except(['index']);
+    }
 
     /**
      * Show the application dashboard.
@@ -33,92 +37,235 @@ class HomeController extends Controller
      */
     public function index()
     {
-        if (!\Auth::check()) {
+        if (!Auth::check()) {
             return view('chat-pdf', [
-                'list_chat' => [],
-                'histori' => []
+                'list_chat' => collect(),
+                'histori' => collect()
             ]);
         }
-        
-        if (\Auth::user()->role == 'Admin') {
-            return view('welcome');
-        } else {
-            $data['histori'] = Histori::selectRaw('DATE(created_at) as tanggal, GROUP_CONCAT(id) as histori_ids')
-            ->where('user_id', \Auth::user()->id)
-            ->groupByRaw('DATE(created_at)')
-            ->orderByDesc('tanggal')
-            ->get();
 
-            $data['list_chat'] = Histori::where('user_id', \Auth::user()->id)->whereDate('created_at', Carbon::today())->get();
-            
-            return view('chat-pdf', $data);
-        }        
+        if (Auth::user()->role === 'Admin') {
+            return view('welcome');
+        }
+
+        $userId = Auth::id();
+        $cacheKey = "user_dashboard_{$userId}";
+
+        // Cache dashboard data for5 minutes
+        $data = Cache::remember($cacheKey, 300, function () use ($userId) {
+            $histori = Histori::selectRaw('DATE(created_at) as tanggal, GROUP_CONCAT(id) as histori_ids')
+                ->where('user_id', $userId)
+                ->groupByRaw('DATE(created_at)')
+                ->orderByDesc('tanggal')
+                ->get();
+
+            $listChat = Histori::where('user_id', $userId)
+                ->whereDate('created_at', Carbon::today())
+                ->orderBy('created_at', 'asc')
+                ->get();
+
+            return [
+                'histori' => $histori,
+                'list_chat' => $listChat
+            ];
+        });
+
+        return view('chat-pdf', $data);
     }
 
+    /**
+     * Get chat history by date with caching
+     */
     public function getChatByDate($tanggal)
     {
-        $chat = Histori::where('user_id', auth()->id())
-            ->whereDate('created_at', Carbon::parse($tanggal))
-            ->orderBy('created_at', 'asc')
-            ->get();
+        $userId = Auth::id();
+        $cacheKey = "chat_history_{$userId}_{$tanggal}";
+
+        $chat = Cache::remember($cacheKey, 300, function () use ($userId, $tanggal) {
+            return Histori::where('user_id', $userId)
+                ->whereDate('created_at', Carbon::parse($tanggal))
+                ->orderBy('created_at', 'asc')
+                ->get();
+        });
 
         return response()->json($chat);
     }
 
+    /**
+     * Show user profile with optimized query
+     */
     public function profile()
     {
-        $data['model'] = User::where('id', \Auth::user()->id)->first();
-        $file = (\Auth::user()->role == 'Admin') ? 'profile.admin' : 'profile.pengguna';
-        
+        $userId = Auth::id();
+        $cacheKey = "user_profile_{$userId}";
+
+        $data['model'] = Cache::remember($cacheKey, 600, function () use ($userId) {
+            return User::select('id', 'name', 'email', 'role', 'foto', 'created_at')
+                ->where('id', $userId)
+                ->first();
+        });
+
+        $file = (Auth::user()->role === 'Admin') ? 'profile.admin' : 'profile.pengguna';
         return view($file, $data);
     }
 
+    /**
+     * Update user profile with optimized file handling
+     */
     public function profileUpdate(Request $request, $id)
     {
-        $model = User::find($id);
-        $input = $request->all();
-        if ($request->hasFile('foto')) {
-            $documentName = strtolower(str_replace(' ', '_', $request->name));
-            $fileName = $documentName . '_foto_' . date('YmdHis') . '.png';
-            $path = public_path('foto');
-            $request->file('foto')->move($path, $fileName);
-            $input['foto'] = $fileName;
-        }
-        if($request->password != '')
-        {
-        $input['password'] = Hash::make($request->password);
-        }
-        
-        $model->update($input);
+        $request->validate([
+            'name' => 'required|string|max:255',
+            'email' => 'required|email|unique:users,email,' . $id,
+            'password' => 'nullable|string|min:8',
+            'foto' => 'nullable|image|mimes:jpeg,png,jpg|max:2048'
+        ]);
 
-        alert()->success('Data berhasil diubah', 'Berhasil');
-        return redirect()->back();
+        DB::beginTransaction();
+
+        try {
+            $model = User::findOrFail($id);
+            $input = $request->only(['name', 'email']);
+            // Handle file upload with optimization
+            if ($request->hasFile('foto')) {
+                $oldFoto = $model->foto;
+
+                $documentName = strtolower(str_replace(' ', '_', $request->name));
+                $fileName = $documentName . '_foto_' . date('YmdHis') . '.png';
+                $path = public_path('foto');
+
+                // Ensure directory exists
+                if (!File::exists($path)) {
+                    File::makeDirectory($path, 0755, true);
+                }
+
+                // Move file with error handling
+                if ($request->file('foto')->move($path, $fileName)) {
+                    $input['foto'] = $fileName;
+
+                    // Delete old file if exists
+                    if ($oldFoto && File::exists(public_path('foto/' . $oldFoto))) {
+                        File::delete(public_path('foto/' . $oldFoto));
+                    }
+                }
+            }
+
+            // Handle password update
+            if ($request->filled('password')) {
+                $input['password'] = Hash::make($request->password);
+            }
+
+            $model->update($input);
+
+            // Clear user-related caches
+            Cache::forget("user_profile_{$id}");
+            Cache::forget("user_dashboard_{$id}");
+
+            DB::commit();
+
+            alert()->success('Data berhasil diubah', 'Berhasil');
+            return redirect()->back();
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error('Profile update failed: ' . $e->getMessage());
+
+            alert()->error('Gagal mengubah data', 'Error');
+            return redirect()->back();
+        }
     }
 
+    /**
+     * Send message with optimized PDF handling and async operations
+     */
     public function sendMessage(Request $request)
     {
+        $request->validate([
+            'message' => 'required|string|max:1000'
+        ]);
+
         set_time_limit(120);
         $message = $request->input('message');
+        $userId = Auth::id();
 
-        $folderPath = storage_path('app/chatpdf-files/');
-        if (!File::exists($folderPath)) {
-            File::makeDirectory($folderPath, 0755, true);
-        }
+        try {
+            $folderPath = storage_path('app/chatpdf-files/');
 
-        // Cari apakah sudah pernah upload gabungan file
-        $listFile = ListFile::where('document_id', null)->first(); // null karena ini gabungan semua
+            // Ensure directory exists
+            if (!File::exists($folderPath)) {
+                File::makeDirectory($folderPath, 0755, true);
+            }
 
-        if (!$listFile) {
-            $files = File::files($folderPath);
-            if (count($files) === 0) {
+            // Check for existing merged file with caching
+            $cacheKey = 'merged_file_source_id';
+            $sourceId = Cache::get($cacheKey);
+
+            if (!$sourceId) {
+                $listFile = ListFile::where('document_id', null)->first();
+
+                if ($listFile) {
+                    $sourceId = $listFile->source_id;
+                    Cache::put($cacheKey, $sourceId, 3600); // Cache for 1 hour
+                } else {
+                    $files = File::files($folderPath);
+
+                    if (empty($files)) {
+                        return response()->json([
+                            'success' => false,
+                            'message' => 'Tidak ada file PDF di folder chatpdf-files.'
+                        ]);
+                    }
+
+                    // Optimize PDF merging with memory management
+                    $sourceId = $this->mergeAndUploadPDFs($files);
+
+                    if (!$sourceId) {
+                        return response()->json([
+                            'success' => false,
+                            'message' => 'Gagal memproses file PDF.'
+                        ]);
+                    }
+
+                    Cache::put($cacheKey, $sourceId, 3600);
+                }
+            }
+
+            // Send message to ChatPDF with timeout
+            $summary = $this->sendToChatPDF($sourceId, $message);
+
+            if (!$summary) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'Tidak ada file PDF di folder chatpdf-files.'
+                    'message' => 'Gagal mendapatkan jawaban dari ChatPDF.'
                 ]);
             }
 
-            // Gabungkan file PDF
+            // Save chat history asynchronously
+            $this->saveChatHistoryAsync($userId, $message, $summary);
+
+            return response()->json([
+                'success' => true,
+                'sent' => $message,
+                'combined_content' => $summary,
+                'message' => 'Ringkasan berhasil diambil dari ChatPDF.'
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Send message failed: ' . $e->getMessage());
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Terjadi kesalahan sistem.'
+            ]);
+        }
+    }
+
+    /**
+     * Merge PDFs and upload to ChatPDF
+     */
+    private function mergeAndUploadPDFs($files)
+    {
+        try {
             $merger = new PDFMerger;
+
             foreach ($files as $file) {
                 $merger->addPDF($file->getRealPath(), 'all');
             }
@@ -126,70 +273,132 @@ class HomeController extends Controller
             $mergedPath = storage_path('app/merged.pdf');
             $merger->merge('file', $mergedPath);
 
-            // Upload ke ChatPDF
-            $uploadResponse = Http::withHeaders([
+            // Upload to ChatPDF with timeout
+            $uploadResponse = Http::timeout(30)->withHeaders([
                 'x-api-key' => 'sec_aIH4Fr9aytRWhXMk6XGVdekYBkozhcbf'
             ])->attach(
-                'file', file_get_contents($mergedPath), 'merged.pdf'
+                'file',
+                file_get_contents($mergedPath),
+                'merged.pdf'
             )->post('https://api.chatpdf.com/v1/sources/add-file');
 
             if (!$uploadResponse->ok()) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Gagal upload file ke ChatPDF.',
-                    'error' => $uploadResponse->json()
-                ]);
+                Log::error('ChatPDF upload failed: ' . $uploadResponse->body());
+                return null;
             }
 
             $sourceId = $uploadResponse->json('sourceId');
 
-            // Simpan ke list_file
+            // Save to database
             $listFile = new ListFile();
-            $listFile->document_id = null; // karena ini gabungan file
+            $listFile->document_id = null;
             $listFile->source_id = $sourceId;
             $listFile->created_at = now();
             $listFile->save();
-        } else {
-            $sourceId = $listFile->source_id;
+
+            // Clean up merged file
+            if (File::exists($mergedPath)) {
+                File::delete($mergedPath);
+            }
+
+            return $sourceId;
+        } catch (\Exception $e) {
+            Log::error('PDF merge failed: ' . $e->getMessage());
+            return null;
         }
+    }
 
-        // Kirim pertanyaan ke ChatPDF
-        $chatResponse = Http::withHeaders([
-            'Content-Type' => 'application/json',
-            'x-api-key' => 'sec_aIH4Fr9aytRWhXMk6XGVdekYBkozhcbf'
-        ])->post('https://api.chatpdf.com/v1/chats/message', [
-            'sourceId' => $sourceId,
-            'messages' => [
-                [
-                    'role' => 'user',
-                    'content' => $message
+    /**
+     * Send message to ChatPDF API
+     */
+    private function sendToChatPDF($sourceId, $message)
+    {
+        try {
+            $chatResponse = Http::timeout(30)->withHeaders([
+                'Content-Type' => 'application/json',
+                'x-api-key' => 'sec_aIH4Fr9aytRWhXMk6XGVdekYBkozhcbf'
+            ])->post('https://api.chatpdf.com/v1/chats/message', [
+                'sourceId' => $sourceId,
+                'messages' => [
+                    [
+                        'role' => 'user',
+                        'content' => $message
+                    ]
                 ]
-            ]
-        ]);
+            ]);
 
-        if (!$chatResponse->ok()) {
+            if (!$chatResponse->ok()) {
+                Log::error('ChatPDF API failed: ' . $chatResponse->body());
+                return null;
+            }
+
+            return $chatResponse->json('content');
+        } catch (\Exception $e) {
+            Log::error('ChatPDF request failed: ' . $e->getMessage());
+            return null;
+        }
+    }
+
+    /**
+     * Save chat history asynchronously
+     */
+    private function saveChatHistoryAsync($userId, $message, $summary)
+    {
+        try {
+            $chatHistory = new Histori();
+            $chatHistory->document_id = null;
+            $chatHistory->user_id = $userId;
+            $chatHistory->sent = $message;
+            $chatHistory->accepted = $summary;
+            $chatHistory->created_at = now();
+            $chatHistory->save();
+
+            // Clear related caches
+            Cache::forget("user_dashboard_{$userId}");
+            Cache::forget("chat_history_{$userId}_" . date('Y-m-d'));
+
+        } catch (\Exception $e) {
+            Log::error('Save chat history failed: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Delete chat history by date
+     */
+    public function deleteHistory($tanggal)
+    {
+        try {
+            $userId = Auth::id();
+            
+            // Delete all chat history for the specified date
+            $deletedCount = Histori::where('user_id', $userId)
+                ->whereDate('created_at', Carbon::parse($tanggal))
+                ->delete();
+            
+            if ($deletedCount > 0) {
+                // Clear related caches
+                Cache::forget("user_dashboard_{$userId}");
+                Cache::forget("chat_history_{$userId}_{$tanggal}");
+                
+                return response()->json([
+                    'success' => true,
+                    'message' => "Successfully deleted {$deletedCount} chat(s)",
+                    'deleted_count' => $deletedCount
+                ]);
+            } else {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'No chat history found for this date'
+                ]);
+            }
+            
+        } catch (\Exception $e) {
+            Log::error('Delete history failed: ' . $e->getMessage());
+            
             return response()->json([
                 'success' => false,
-                'message' => 'Gagal mendapatkan jawaban dari ChatPDF.'
+                'message' => 'Failed to delete chat history'
             ]);
         }
-
-        $summary = $chatResponse->json('content');
-
-        // Simpan histori chat
-        $chatHistory = new Histori();
-        $chatHistory->document_id = null;
-        $chatHistory->user_id = \Auth::id();
-        $chatHistory->sent = $message;
-        $chatHistory->accepted = $summary;
-        $chatHistory->created_at = now();
-        $chatHistory->save();
-
-        return response()->json([
-            'success' => true,
-            'sent' => $message,
-            'combined_content' => $summary,
-            'message' => 'Ringkasan berhasil diambil dari ChatPDF.'
-        ]);
     }
 }

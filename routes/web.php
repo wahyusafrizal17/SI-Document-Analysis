@@ -1,6 +1,7 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Facades\Auth;
 
 /*
 |--------------------------------------------------------------------------
@@ -31,5 +32,6 @@ Route::middleware(['auth'])->group(function () {
     Route::post('users/delete', 'App\Http\Controllers\UsersController@delete')->name('users.delete');
 
     Route::get('/chat/history/{tanggal}', [App\Http\Controllers\HomeController::class, 'getChatByDate'])->name('chat.history');
+    Route::delete('/chat/history/{tanggal}/delete', [App\Http\Controllers\HomeController::class, 'deleteHistory'])->name('chat.history.delete');
 
 });

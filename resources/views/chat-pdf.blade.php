@@ -21,14 +21,12 @@
                 </p>
                 </div>
 
-                <div class="show-chat" id="chat-box" style="display: none;"></div>
-
-
-                {{-- <div class="show-chat" @if(empty($list_chat)) style="display: none" @endif>
+                <div class="show-chat" id="chat-box" style="display: none;">
+                  @if(!empty($list_chat))
                     @foreach($list_chat as $row)
                     <div class="sent">
                         <span class="chat-sent">{{ $row->sent }}
-                            <div class="chat-date">{{ $row->created_at }}</div>
+                            <div class="chat-date">{{ $row->created_at->format('Y-m-d H:i:s') }}</div>
                         </span>
                     </div>
                     <div class="accepted">
@@ -37,24 +35,8 @@
                         </span>
                     </div>
                     @endforeach
-                </div> --}}
-                
-                    {{-- <div class="show-chat" style="display: none">
-                        <div class="sent">
-                            <span class="chat-sent">simpulan dari dokumen ini
-                                <div class="chat-date">2025-02-26 10:20:09</div>
-                            </span>
-                        </div>
-                        <div class="accepted">
-                            <span class="chat-accepted">
-                                <p>Dokumen ini menyajikan Laporan Kinerja Inspektorat Bidang Kinerja Kelembagaan Tahun Anggaran 2023, yang mencakup komitmen terhadap peningkatan integritas, akuntabilitas, transparansi, dan kinerja aparatur. Laporan ini menjelaskan penurunan indikator kinerja, rencana kerja, serta hasil reviu atas berbagai kegiatan dan anggaran. Selain itu, terdapat rekomendasi untuk perbaikan dan integrasi manajemen risiko dalam proses perencanaan. Secara keseluruhan, dokumen ini bertujuan untuk menjadi tolok ukur kinerja dan dasar evaluasi bagi instansi terkait, serta mendukung pelaksanaan Sistem Akuntabilitas Kinerja Intern Pemerintah (SAKIP).
-                                    <br>Dokumen Laporan Kinerja (LKj) Inspektorat Bidang Administrasi Umum (IBAU) tahun 2023 menyimpulkan bahwa laporan ini merupakan bentuk akuntabilitas atas pelaksanaan tugas dan fungsi IBAU. Laporan ini bertujuan untuk mengukur keberhasilan program pengawasan dan peningkatan akuntabilitas keuangan serta kinerja, sesuai dengan indikator kinerja utama yang telah ditetapkan. Diharapkan, LKj ini dapat menjadi sumber informasi yang berguna untuk evaluasi dan perbaikan kinerja di masa mendatang, sehingga sasaran kinerja dapat tercapai sesuai target yang telah ditetapkan.
-                                    <br>Dokumen ini adalah Laporan Kinerja Inspektorat Utama Tahun 2023 yang mencakup evaluasi atas kapabilitas Aparat Pengawasan Intern Pemerintah (APIP) berdasarkan enam elemen penilaian. Laporan ini menunjukkan bahwa Inspektorat Utama telah mencapai target kinerja 100% dalam pelaksanaan rencana aksi reformasi birokrasi. Selain itu, laporan ini juga mencakup kontribusi Inspektorat Utama terhadap pencapaian Kementerian PPN/Bappenas dan evaluasi internal atas berbagai kegiatan utama. Rekomendasi dari hasil audit menunjukkan bahwa transformasi Kementerian PPN/Bappenas perlu ditingkatkan untuk meningkatkan kualitas perencanaan dan pengendalian pembangunan nasional.
-                                    <br>
-                                </p>
-                            </span>
-                        </div>
-                    </div> --}}
+                  @endif
+                </div>
               </div>
             </div>
             <form onsubmit="sendMessage(); return false;" class="mt-auto" style="padding: 0px 30px 0px 30px;background: #3a3a3a">
@@ -83,7 +65,31 @@
 
 @push('scripts')
 <script>
-    function showHistory(date) {
+    function showHistory(date, el) {
+        // Remove active class from all history items
+        document.querySelectorAll('.history-nav-item').forEach(item => {
+            item.classList.remove('active');
+            // Reset background style
+            const card = item.querySelector('.history-card');
+            if (card) {
+                card.style.background = 'rgba(255,255,255,0.05)';
+                card.style.borderColor = 'rgba(255,255,255,0.1)';
+            }
+        });
+        
+        // Add active class to clicked item
+        if (el) {
+            const navItem = el.closest('.history-nav-item');
+            if (navItem) {
+                navItem.classList.add('active');
+                // Update background style for active item
+                const card = navItem.querySelector('.history-card');
+                if (card) {
+                    card.style.background = 'linear-gradient(135deg, #6a82fb 0%, #fc5c7d 100%)';
+                    card.style.borderColor = 'rgba(255,255,255,0.3)';
+                }
+            }
+        }
         fetch(`/chat/history/${date}`)
             .then(response => response.json())
             .then(data => {
@@ -97,10 +103,18 @@
                 } else {
                     let html = '';
                     data.forEach(row => {
+                        // Format the date to 'YYYY-MM-DD HH:mm:ss'
+                        const dateObj = new Date(row.created_at);
+                        const formattedDate = dateObj.getFullYear() + '-' +
+                            String(dateObj.getMonth() + 1).padStart(2, '0') + '-' +
+                            String(dateObj.getDate()).padStart(2, '0') + ' ' +
+                            String(dateObj.getHours()).padStart(2, '0') + ':' +
+                            String(dateObj.getMinutes()).padStart(2, '0') + ':' +
+                            String(dateObj.getSeconds()).padStart(2, '0');
                         html += `
                             <div class="sent">
                                 <span class="chat-sent">${row.sent}
-                                    <div class="chat-date">${row.created_at}</div>
+                                    <div class="chat-date">${formattedDate}</div>
                                 </span>
                             </div>
                             <div class="accepted">
@@ -121,6 +135,15 @@
         @guest
             $('#loginModal').modal("show");
         @endguest
+        
+        // Show chat history if exists on page load
+        @if(!empty($list_chat))
+            $('.box-sambutan').hide();
+            $('.show-chat').show();
+            setTimeout(() => {
+                scrollToBottom();
+            }, 100);
+        @endif
     });
 
     function showRegister() {
@@ -134,12 +157,12 @@
     }
 
     function formatPreserved(content) {
+        if (!content) return '';
         return content
-        ? content.replace(/&/g, "&amp;")
-                    .replace(/</g, "&lt;")
-                    .replace(/>/g, "&gt;")
-                    .replace(/\n/g, "<br>")
-        : '';
+            .replace(/&/g, "&amp;")
+            .replace(/</g, "&lt;")
+            .replace(/>/g, "&gt;")
+            .replace(/\n/g, "<br>");
     }
 
     function scrollToBottom() {
@@ -200,7 +223,11 @@
                 _token: $('meta[name="csrf-token"]').attr('content')
             },
             success: function(response) {
-                acceptedHtml.find('.chat-accepted').html(`<p>${formatPreserved(response.combined_content)}</p>`);
+                if (response.success) {
+                    acceptedHtml.find('.chat-accepted').html(`<p>${formatPreserved(response.combined_content)}</p>`);
+                } else {
+                    acceptedHtml.find('.chat-accepted').html(`<p style="color:red;">Error: ${response.message}</p>`);
+                }
                 scrollToBottom();
             },
             error: function(xhr, status, error) {
@@ -210,8 +237,12 @@
         });
     }
 
-
-
-
+    // Add keyboard event listener for Enter key
+    $(document).on('keypress', '.value-message', function(e) {
+        if (e.which === 13) { // Enter key
+            e.preventDefault();
+            sendMessage();
+        }
+    });
 </script>
 @endpush
