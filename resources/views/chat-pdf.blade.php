@@ -111,6 +111,11 @@
                             String(dateObj.getHours()).padStart(2, '0') + ':' +
                             String(dateObj.getMinutes()).padStart(2, '0') + ':' +
                             String(dateObj.getSeconds()).padStart(2, '0');
+                        // Format the accepted content to handle bold markdown
+                        const formattedAccepted = row.accepted
+                            .replace(/\n/g, '<br>')
+                            .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+                        
                         html += `
                             <div class="sent">
                                 <span class="chat-sent">${row.sent}
@@ -119,7 +124,7 @@
                             </div>
                             <div class="accepted">
                                 <span class="chat-accepted">
-                                    <p>${row.accepted.replace(/\n/g, '<br>')}</p>
+                                    <p>${formattedAccepted}</p>
                                 </span>
                             </div>
                         `;
@@ -170,7 +175,8 @@
             .replace(/&/g, "&amp;")
             .replace(/</g, "&lt;")
             .replace(/>/g, "&gt;")
-            .replace(/\n/g, "<br>");
+            .replace(/\n/g, "<br>")
+            .replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>");
     }
 
     function scrollToBottom() {
