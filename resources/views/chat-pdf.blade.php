@@ -64,6 +64,42 @@
 @endsection
 
 @push('scripts')
+<style>
+.loading-dots {
+  display: inline-block;
+  width: 40px;
+  text-align: left;
+}
+.loading-dots span {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  margin-right: 3px;
+  background: #aaa;
+  border-radius: 50%;
+  opacity: 0.5;
+  animation: loading-bounce 1.4s infinite both;
+}
+.loading-dots span:nth-child(1) {
+  animation-delay: 0s;
+}
+.loading-dots span:nth-child(2) {
+  animation-delay: 0.2s;
+}
+.loading-dots span:nth-child(3) {
+  animation-delay: 0.4s;
+}
+@keyframes loading-bounce {
+  0%, 80%, 100% {
+    transform: translateY(0);
+    opacity: 0.5;
+  }
+  40% {
+    transform: translateY(-8px);
+    opacity: 1;
+  }
+}
+</style>
 <script>
     function showHistory(date, el) {
         // Remove active class from all history items
@@ -213,13 +249,13 @@
             </div>
         `;
 
-        const acceptedHtml = $(`
-            <div class="accepted">
+        const acceptedHtml = $(
+            `<div class="accepted">
                 <span class="chat-accepted">
-                    <p><em>Processing...</em></p>
+                    <span class="loading-dots"><span></span><span></span><span></span></span>
                 </span>
-            </div>
-        `);
+            </div>`
+        );
 
         // Tambahkan ke DOM
         $('.show-chat').append(sentHtml);

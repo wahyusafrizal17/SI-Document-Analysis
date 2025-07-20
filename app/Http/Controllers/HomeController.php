@@ -303,6 +303,12 @@ class HomeController extends Controller
     private function sendToChatPDF($sourceId, $message)
     {
         try {
+            // Prompt engineering: tambahkan konteks jika pesan terlalu singkat
+            $wordCount = str_word_count($message);
+            if ($wordCount < 5) {
+                $message = 'Tolong carikan informasi secara detail tentang: "' . $message . '" dari dokumen ini.';
+            }
+
             $chatResponse = Http::timeout(30)->withHeaders([
                 'Content-Type' => 'application/json',
                 'x-api-key' => 'sec_aIH4Fr9aytRWhXMk6XGVdekYBkozhcbf'
