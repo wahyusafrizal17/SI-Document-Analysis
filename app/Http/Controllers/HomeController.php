@@ -303,10 +303,30 @@ class HomeController extends Controller
     private function sendToChatPDF($sourceId, $message)
     {
         try {
-            // Prompt engineering: tambahkan konteks jika pesan terlalu singkat
+            // Daftar sapaan yang umum
+            $greetings = [
+                'pagi',
+                'siang',
+                'sore',
+                'malam',
+                'halo',
+                'hai',
+                'assalamualaikum',
+                'hi'
+            ];
+            $lowerMessage = strtolower(trim($message));
+            $isGreeting = false;
+            foreach ($greetings as $greet) {
+                if (strpos($lowerMessage, $greet) !== false) {
+                    $isGreeting = true;
+                    break;
+                }
+            }
+
+            // Prompt engineering: tambahkan konteks jika pesan terlalu singkat dan bukan sapaan
             $wordCount = str_word_count($message);
-            if ($wordCount < 5) {
-                $message = 'Tolong carikan informasi secara detail tentang: "' . $message . '" dari dokumen ini.';
+            if ($wordCount < 5 && !$isGreeting) {
+                $message = 'Tolong carikan informasi tentang: "' . $message . '" dari dokumen ini.';
             }
 
             $chatResponse = Http::timeout(30)->withHeaders([

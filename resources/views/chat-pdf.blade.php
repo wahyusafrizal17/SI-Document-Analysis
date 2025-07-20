@@ -13,7 +13,7 @@
             <div class="content-chat d-flex flex-column" id="content-chat">
               <div style="padding: 30px;">
                 <div id="welcome-box" class="box-sambutan" style="display: block;">
-                <div style="position:absolute; right: 390px; background-color:#FFD700; width: 213px; height: 62px; transform:rotate(1.73deg); border-radius:10px; z-index: 1; margin-top: 15px;" class="landing-header-pdf-highlight" aria-hidden="true"></div>
+                <div style="position:absolute; right: 395px; background-color:#FFD700; width: 213px; height: 62px; transform:rotate(1.73deg); border-radius:10px; z-index: 1; margin-top: 15px;" class="landing-header-pdf-highlight" aria-hidden="true"></div>
                 <h1 class="text-sambutan">Selamat Datang!</h1>
                 <p class="p-sambutan mt-2">
                     Selamat datang di TEDC ChatDoc AI! Temukan informasi yang Anda butuhkan tentang kampus, program studi, jadwal akademik, dan layanan lainnya. <br><br>
