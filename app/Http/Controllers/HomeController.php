@@ -264,7 +264,7 @@ class HomeController extends Controller
 
             // Upload to ChatPDF with timeout
             $uploadResponse = Http::timeout(30)->withHeaders([
-                'x-api-key' => 'sec_aM6SKaZa6Pn4BQWOl5PPmafjsN9zFwGv'
+                'x-api-key' => 'sec_aIH4Fr9aytRWhXMk6XGVdekYBkozhcbf'
             ])->attach(
                 'file',
                 file_get_contents($mergedPath),
@@ -305,7 +305,7 @@ class HomeController extends Controller
         try {
             $chatResponse = Http::timeout(30)->withHeaders([
                 'Content-Type' => 'application/json',
-                'x-api-key' => 'sec_aM6SKaZa6Pn4BQWOl5PPmafjsN9zFwGv'
+                'x-api-key' => 'sec_aIH4Fr9aytRWhXMk6XGVdekYBkozhcbf'
             ])->post('https://api.chatpdf.com/v1/chats/message', [
                 'sourceId' => $sourceId,
                 'messages' => [
