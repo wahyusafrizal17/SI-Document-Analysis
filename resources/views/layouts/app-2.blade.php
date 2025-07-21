@@ -25,9 +25,9 @@
     <link rel="stylesheet" type="text/css" href="{{ asset('app-assets/css/components.css') }}">
     <link rel="stylesheet" type="text/css" href="{{ asset('app-assets/css/themes/bordered-layout.css') }}">
     <link rel="stylesheet" type="text/css" href="{{ asset('app-assets/css/core/menu/menu-types/horizontal-menu.css') }}">
-    <link rel="stylesheet" type="text/css" href="../../../app-assets/css/themes/semi-dark-layout.css">
+    <link rel="stylesheet" type="text/css" href="{{ asset('app-assets/css/themes/semi-dark-layout.css') }}">
     <link rel="stylesheet" type="text/css" href="{{ asset('app-assets/css/pages/style.css') }}">
-    <link rel="stylesheet" type="text/css" href="{{ asset('app-assets/css/plugins/extensions/ext-component-toastr.css') }}">
+    {{-- <link rel="stylesheet" type="text/css" href="{{ asset('app-assets/css/plugins/extensions/ext-component-toastr.css') }}"> --}}
 
 </head>
 <!-- END: Head-->
@@ -40,7 +40,9 @@
     <nav class="header-navbar navbar navbar-expand-lg align-items-center floating-nav navbar-light navbar-shadow container-xxl" style="backdrop-filter: blur(12px); background: rgba(30,30,30,0.85); border-radius: 0 0 2rem 2rem; box-shadow: 0 4px 24px 0 rgba(31,38,135,0.15);">
         <div class="navbar-container d-flex content" style="background: transparent;">
             <div class="bookmark-wrapper d-flex align-items-center">
-                <h2 style="font-size: 22px;font-weight: bold;margin-bottom: 5px;color: white;letter-spacing: 1px;">AI CHAT</h2>
+                <a href="/">
+                    <h2 style="font-size: 22px;font-weight: bold;margin-bottom: 5px;color: white;letter-spacing: 1px;">AI CHAT</h2>
+                </a>
             </div>
             <ul class="nav navbar-nav align-items-center ms-auto">
                 <li class="nav-item dropdown dropdown-user">
@@ -54,7 +56,7 @@
                             {{-- <span class="avatar-status-online"></span> --}}
                         </span>
                     </a>
-                    <div class="dropdown-menu dropdown-menu-end" aria-labelledby="dropdown-user" style="display: none;">
+                    <div class="dropdown-menu dropdown-menu-end" aria-labelledby="dropdown-user">
                         @if(Auth::check())
                         <a class="dropdown-item" href="{{ route('profile.index') }}">
                             <i class="me-50" data-feather="user"></i> Profile
