@@ -99,3 +99,12 @@
 .semi-dark-layout .main-menu, .main-menu.menu-dark .navigation{
     background-color: #1E1E1E !important;
 }
+
+@media (max-width: 991.98px) {
+    .content-chat {
+        height: 510px !important;
+    }
+    .chat-accepted{
+        max-width: 95%;
+    }
+}
