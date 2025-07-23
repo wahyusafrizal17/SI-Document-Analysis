@@ -326,7 +326,7 @@ class HomeController extends Controller
             // Prompt engineering: tambahkan konteks jika pesan terlalu singkat dan bukan sapaan
             $wordCount = str_word_count($message);
             if ($wordCount < 5 && !$isGreeting) {
-                $message = 'Tolong carikan informasi tentang: "' . $message . '" dari dokumen ini.';
+                $message = 'Tolong summary-kan secara lengkap dan menyeluruh tentang: "' . $message . '" dari seluruh dokumen ini, termasuk jika informasinya tersebar di beberapa halaman.';
             }
 
             $chatResponse = Http::timeout(30)->withHeaders([
