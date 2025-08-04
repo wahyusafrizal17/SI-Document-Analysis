@@ -15,7 +15,7 @@ use App\Models\ListFile;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\File;
-use Clegginabox\PDFMerger\PDFMerger;
+
 use Illuminate\Support\Facades\Log;
 
 class HomeController extends Controller
@@ -185,37 +185,17 @@ class HomeController extends Controller
         $userId = Auth::id();
 
         try {
-            $folderPath = storage_path('app/chatpdf-files/');
-
-            // Ensure directory exists
-            if (!File::exists($folderPath)) {
-                File::makeDirectory($folderPath, 0755, true);
-            }
-
-            // Cari listFile yang belum punya document_id
-            $listFile = ListFile::where('document_id', null)->first();
+            // Cari listFile yang tersedia dan terhubung dengan dokumen
+            $listFile = ListFile::whereNotNull('document_id')->first();
 
             if ($listFile) {
                 $sourceId = $listFile->source_id;
             } else {
-                $files = File::files($folderPath);
-
-                if (empty($files)) {
-                    return response()->json([
-                        'success' => false,
-                        'message' => 'Tidak ada file PDF di folder chatpdf-files.'
-                    ]);
-                }
-
-                // Merge dan upload file, dapatkan sourceId baru
-                $sourceId = $this->mergeAndUploadPDFs($files);
-
-                if (!$sourceId) {
-                    return response()->json([
-                        'success' => false,
-                        'message' => 'Gagal memproses file PDF.'
-                    ]);
-                }
+                // Jika tidak ada listFile yang terhubung dengan dokumen, berarti belum ada dokumen yang diupload dengan benar
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Silakan upload dokumen terlebih dahulu sebelum melakukan chat. Pastikan dokumen berhasil diupload ke sistem.'
+                ]);
             }
 
             // Send message to ChatPDF with timeout
@@ -247,55 +227,7 @@ class HomeController extends Controller
         }
     }
 
-    /**
-     * Merge PDFs and upload to ChatPDF
-     */
-    private function mergeAndUploadPDFs($files)
-    {
-        try {
-            $merger = new PDFMerger;
 
-            foreach ($files as $file) {
-                $merger->addPDF($file->getRealPath(), 'all');
-            }
-
-            $mergedPath = storage_path('app/merged.pdf');
-            $merger->merge('file', $mergedPath);
-
-            // Upload to ChatPDF with timeout
-            $uploadResponse = Http::timeout(30)->withHeaders([
-                'x-api-key' => 'sec_aIH4Fr9aytRWhXMk6XGVdekYBkozhcbf'
-            ])->attach(
-                'file',
-                file_get_contents($mergedPath),
-                'merged.pdf'
-            )->post('https://api.chatpdf.com/v1/sources/add-file');
-
-            if (!$uploadResponse->ok()) {
-                Log::error('ChatPDF upload failed: ' . $uploadResponse->body());
-                return null;
-            }
-
-            $sourceId = $uploadResponse->json('sourceId');
-
-            // Save to database
-            $listFile = new ListFile();
-            $listFile->document_id = null;
-            $listFile->source_id = $sourceId;
-            $listFile->created_at = now();
-            $listFile->save();
-
-            // Clean up merged file
-            if (File::exists($mergedPath)) {
-                File::delete($mergedPath);
-            }
-
-            return $sourceId;
-        } catch (\Exception $e) {
-            Log::error('PDF merge failed: ' . $e->getMessage());
-            return null;
-        }
-    }
 
     /**
      * Send message to ChatPDF API
