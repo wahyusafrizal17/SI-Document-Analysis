@@ -258,7 +258,8 @@ class HomeController extends Controller
             // Prompt engineering: selalu gunakan prompt yang memastikan pencarian menyeluruh
             if (!$isGreeting) {
                 // Untuk semua pencarian (bukan sapaan), gunakan prompt yang memastikan pencarian dari seluruh dokumen
-                $message = 'Tolong carikan dan rangkum secara lengkap dan menyeluruh tentang: "' . $message . '" dari seluruh dokumen ini, termasuk jika informasinya tersebar di beberapa halaman. Pastikan semua informasi terkait ditemukan dan ditampilkan.';
+                // Tambahkan instruksi untuk mengabaikan case sensitivity
+                $message = 'Tolong carikan dan rangkum secara lengkap dan menyeluruh tentang: "' . $message . '" dari seluruh dokumen ini, termasuk jika informasinya tersebar di beberapa halaman. Carilah dengan mengabaikan huruf besar/kecil (case insensitive). Pastikan semua informasi terkait ditemukan dan ditampilkan.';
             }
 
             $chatResponse = Http::timeout(30)->withHeaders([
