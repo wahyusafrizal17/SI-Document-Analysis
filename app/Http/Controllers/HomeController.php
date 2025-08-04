@@ -263,47 +263,10 @@ class HomeController extends Controller
                 $message = 'Tolong carikan dan rangkum secara lengkap dan menyeluruh tentang: "' . $originalMessage . '" dari seluruh dokumen ini. Carilah dengan berbagai variasi kata kunci (termasuk sinonim dan variasi penulisan). Pastikan mencari di semua halaman dan menampilkan SEMUA informasi terkait yang ditemukan, tidak peduli di halaman mana informasinya berada. Jika ada informasi yang tersebar di beberapa halaman, rangkum semuanya.';
             }
 
-            // Jika bukan sapaan, coba dengan beberapa variasi query untuk memastikan hasil lengkap
+            // Jika bukan sapaan, gunakan prompt yang lebih sederhana tapi efektif
             if (!$isGreeting) {
-                $originalMessage = $message;
-                $variations = [
-                    $originalMessage,
-                    strtolower($originalMessage),
-                    strtoupper($originalMessage),
-                    ucwords(strtolower($originalMessage))
-                ];
-                
-                $allResponses = [];
-                
-                foreach ($variations as $variation) {
-                    $queryMessage = 'Tolong carikan dan rangkum secara lengkap dan menyeluruh tentang: "' . $variation . '" dari seluruh dokumen ini. Carilah dengan berbagai variasi kata kunci (termasuk sinonim dan variasi penulisan). Pastikan mencari di semua halaman dan menampilkan SEMUA informasi terkait yang ditemukan, tidak peduli di halaman mana informasinya berada. Jika ada informasi yang tersebar di beberapa halaman, rangkum semuanya.';
-                    
-                    $chatResponse = Http::timeout(30)->withHeaders([
-                        'Content-Type' => 'application/json',
-                        'x-api-key' => 'sec_aIH4Fr9aytRWhXMk6XGVdekYBkozhcbf'
-                    ])->post('https://api.chatpdf.com/v1/chats/message', [
-                        'sourceId' => $sourceId,
-                        'messages' => [
-                            [
-                                'role' => 'user',
-                                'content' => $queryMessage
-                            ]
-                        ]
-                    ]);
-                    
-                    if ($chatResponse->ok()) {
-                        $response = $chatResponse->json('content');
-                        if ($response && !empty(trim($response))) {
-                            $allResponses[] = $response;
-                        }
-                    }
-                }
-                
-                // Gabungkan semua respons yang berbeda
-                if (!empty($allResponses)) {
-                    $combinedResponse = implode("\n\n---\n\n", array_unique($allResponses));
-                    return $combinedResponse;
-                }
+                // Gunakan prompt yang memaksa ChatPDF untuk mencari di seluruh dokumen
+                $message = 'Summary kan semua informasi tentang "' . $message . '" dari dokumen ini. Pastikan mencari di semua halaman dan tampilkan SEMUA informasi yang ditemukan.';
             }
             
             // Fallback ke query tunggal jika multiple queries gagal
