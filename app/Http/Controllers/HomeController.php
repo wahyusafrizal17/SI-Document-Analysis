@@ -255,10 +255,10 @@ class HomeController extends Controller
                 }
             }
 
-            // Prompt engineering: tambahkan konteks jika pesan terlalu singkat dan bukan sapaan
-            $wordCount = str_word_count($message);
-            if ($wordCount < 5 && !$isGreeting) {
-                $message = 'Tolong summary-kan secara lengkap dan menyeluruh tentang: "' . $message . '" dari seluruh dokumen ini, termasuk jika informasinya tersebar di beberapa halaman.';
+            // Prompt engineering: selalu gunakan prompt yang memastikan pencarian menyeluruh
+            if (!$isGreeting) {
+                // Untuk semua pencarian (bukan sapaan), gunakan prompt yang memastikan pencarian dari seluruh dokumen
+                $message = 'Tolong carikan dan rangkum secara lengkap dan menyeluruh tentang: "' . $message . '" dari seluruh dokumen ini, termasuk jika informasinya tersebar di beberapa halaman. Pastikan semua informasi terkait ditemukan dan ditampilkan.';
             }
 
             $chatResponse = Http::timeout(30)->withHeaders([
