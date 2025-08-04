@@ -266,11 +266,11 @@ class HomeController extends Controller
             // Jika bukan sapaan, gunakan prompt yang lebih sederhana tapi efektif
             if (!$isGreeting) {
                 // Gunakan prompt yang memaksa ChatPDF untuk mencari di seluruh dokumen
-                $message = 'Tolong carikan dan rangkum secara lengkap dan menyeluruh tentang: "' . $message . '" dari seluruh dokumen ini, termasuk jika informasinya tersebar di beberapa halaman. Carilah dengan mengabaikan huruf besar/kecil (case insensitive). Pastikan semua informasi terkait ditemukan dan ditampilkan.';
+                $message = 'Summary kan "' . $message . '" dari seluruh dokumen ini. Pastikan mencari di semua halaman dan tampilkan semua informasi terkait yang ditemukan.';
             }
             
             // Fallback ke query tunggal jika multiple queries gagal
-            $chatResponse = Http::timeout(30)->withHeaders([
+            $chatResponse = Http::timeout(40)->withHeaders([
                 'Content-Type' => 'application/json',
                 'x-api-key' => 'sec_aIH4Fr9aytRWhXMk6XGVdekYBkozhcbf'
             ])->post('https://api.chatpdf.com/v1/chats/message', [
