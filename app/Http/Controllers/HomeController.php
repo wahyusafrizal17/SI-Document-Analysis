@@ -266,7 +266,7 @@ class HomeController extends Controller
             // Jika bukan sapaan, gunakan prompt yang lebih sederhana tapi efektif
             if (!$isGreeting) {
                 // Gunakan prompt yang memaksa ChatPDF untuk mencari di seluruh dokumen
-                $message = 'Summary kan semua informasi tentang "' . $message . '" dari dokumen ini. Pastikan mencari di semua halaman dan tampilkan SEMUA informasi yang ditemukan.';
+                $message = 'Tolong carikan dan rangkum secara lengkap dan menyeluruh tentang: "' . $message . '" dari seluruh dokumen ini, termasuk jika informasinya tersebar di beberapa halaman. Carilah dengan mengabaikan huruf besar/kecil (case insensitive). Pastikan semua informasi terkait ditemukan dan ditampilkan.';
             }
             
             // Fallback ke query tunggal jika multiple queries gagal
